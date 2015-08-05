@@ -14,6 +14,234 @@
 
 USING_NAMESPACE_WFX;
 
+TimerKey::TimerKey()
+: m_hWid(INVALID_HWID)
+, m_pWid(NULL)
+{
+
+}
+
+TimerKey::TimerKey( HWID hWid, Widget* pWid )
+: m_hWid(hWid)
+, m_pWid(pWid)
+{
+
+}
+
+bool TimerKey::operator()( const TimerKey& key1, const TimerKey& key2 ) const
+{
+	if (key1.m_hWid < key2.m_hWid)
+		return true;
+	else if (key1.m_hWid > key2.m_hWid)
+		return false;
+	else if (key1.m_pWid < key2.m_pWid )
+		return true;
+	else
+		return false;
+}
+
+bool TimerKey::operator<( const TimerKey& key ) const
+{
+	if (m_hWid < key.m_hWid)
+	{
+		return true;
+	}
+	if (m_hWid > key.m_hWid)
+	{
+		return false;
+	}
+	if (m_pWid < key.m_pWid)
+	{
+		return true;
+	}
+	if (m_pWid > key.m_pWid)
+	{
+		return false;
+	}
+	return false;
+}
+
+bool TimerKey::operator==( const TimerKey& key ) const
+{
+	return (m_hWid == key.m_hWid) && (m_pWid == key.m_pWid);
+}
+
+bool TimerKey::operator!=( const TimerKey& key ) const
+{
+	return !operator==(key);
+}
+
+TimerTranslator::TimerTranslator()
+: m_nTimerBase(0)
+{
+
+}
+
+BOOL TimerTranslator::WidTimerToWndTimer( Widget* pWid, UINT_PTR nWidTimer, UINT_PTR& nWndTimer )
+{
+	WFX_CONDITION(pWid != NULL);
+	TimerKey tmk(pWid->GetHwid(), pWid);
+	std::map<TimerKey, Timer2Timer>::iterator itWidtoWnd = m_WidToWnd.find(tmk);
+	if (itWidtoWnd != m_WidToWnd.end())
+	{
+		Timer2Timer::iterator itTimer2Timer = itWidtoWnd->second.find(nWidTimer);
+		if (itTimer2Timer != itWidtoWnd->second.end())
+		{
+			nWndTimer = itTimer2Timer->second;
+		}
+		else
+		{
+			nWndTimer = GenerateWndTimer();
+			itWidtoWnd->second.insert(std::make_pair(nWidTimer, nWndTimer));
+		}
+	}
+	else
+	{
+		Timer2Timer t2t;
+		nWndTimer = GenerateWndTimer();
+		t2t.insert(std::make_pair(nWidTimer, nWndTimer));
+		m_WidToWnd.insert(std::make_pair(tmk, t2t));
+	}
+	TimerValue tv(tmk, nWidTimer);
+	std::map<UINT_PTR, TimerValue>::iterator itWndToWid = m_WndToWid.find(nWndTimer);
+	if (itWndToWid != m_WndToWid.end())
+	{
+		itWndToWid->second = tv;
+	}
+	else
+	{
+		m_WndToWid.insert(std::make_pair(nWndTimer, tv));
+	}
+	return TRUE;
+}
+
+BOOL TimerTranslator::WndTimerToWidTimer( UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer )
+{
+	std::map<UINT_PTR, TimerValue>::iterator itWndToWid = m_WndToWid.find(nWndTimer);
+	if (itWndToWid != m_WndToWid.end())
+	{
+		pWid = itWndToWid->second.m_tk.m_pWid;
+		nWidTimer = itWndToWid->second.m_nWidTimer;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL TimerTranslator::RemoveWidTimer( Widget* pWid, UINT_PTR nWidTimer )
+{
+	UINT_PTR nWndTimer = 0;
+	WFX_CONDITION(pWid != NULL);
+	TimerKey tmk(pWid->GetHwid(), pWid);
+	std::map<TimerKey, Timer2Timer>::iterator itWidtoWnd = m_WidToWnd.find(tmk);
+	if (itWidtoWnd != m_WidToWnd.end())
+	{
+		Timer2Timer::iterator itTimer2Timer = itWidtoWnd->second.find(nWidTimer);
+		if (itTimer2Timer != itWidtoWnd->second.end())
+		{
+			itWidtoWnd->second.erase(itTimer2Timer);
+		}
+	}
+
+	std::map<UINT_PTR, TimerValue>::iterator itWndToWid = m_WndToWid.find(nWndTimer);
+	if (itWndToWid != m_WndToWid.end())
+	{
+		m_WndToWid.erase(itWndToWid);
+	}
+	RecycleWndTimer(nWndTimer);
+	return TRUE;
+}
+
+BOOL TimerTranslator::RemoveAllWidTimer( Widget* pWid, std::vector<UINT_PTR>& rgWndTimer )
+{
+	rgWndTimer.clear();
+	UINT_PTR nWndTimer = 0;
+	WFX_CONDITION(pWid != NULL);
+	TimerKey tmk(pWid->GetHwid(), pWid);
+	std::map<TimerKey, Timer2Timer>::iterator itWidtoWnd = m_WidToWnd.find(tmk);
+	if (itWidtoWnd != m_WidToWnd.end())
+	{
+		for (Timer2Timer::iterator itT2T = itWidtoWnd->second.begin(); 
+			itT2T != itWidtoWnd->second.end(); ++itT2T)
+		{
+			std::map<UINT_PTR, TimerValue>::iterator itWndToWid = m_WndToWid.find(itT2T->second);
+			if (itWndToWid != m_WndToWid.end())
+			{
+				m_WndToWid.erase(itWndToWid);
+			}
+			rgWndTimer.push_back(itT2T->second);
+		}
+		m_WidToWnd.erase(itWidtoWnd);
+	}
+	return TRUE;
+}
+
+UINT_PTR TimerTranslator::GenerateWndTimer()
+{
+	return ++m_nTimerBase;
+}
+
+BOOL TimerTranslator::RecycleWndTimer(UINT_PTR nWndTimer)
+{
+	return TRUE;
+}
+
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+Timer::Timer( WidDispatch* pDispatch )
+: m_pDispatch(pDispatch)
+, m_pTimerTranslator(new TimerTranslator)
+{
+
+}
+
+
+UINT_PTR Timer::SetWidTimer( Widget* pWid,
+							UINT_PTR nWidTimer, UINT uElapse, 
+							TIMERPROC lpTimerFunc )
+{
+	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(pWid != NULL);
+	WFX_CONDITION(uElapse > 0);
+	UINT_PTR nWndTimer = 0;
+	if (!m_pTimerTranslator->WidTimerToWndTimer(pWid, nWidTimer, nWndTimer))
+	{
+		return 0;
+	}
+	return ::SetTimer(m_pDispatch->GetHwnd(), nWndTimer, uElapse, lpTimerFunc);
+}
+
+BOOL Timer::KillWidTimer( Widget* pWid, UINT_PTR nWidTimer )
+{
+	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(pWid!=NULL);
+	UINT_PTR nWndTimer = 0;
+	if (!m_pTimerTranslator->WidTimerToWndTimer(pWid, nWidTimer, nWndTimer))
+	{
+		return FALSE;
+	}
+	BOOL bRet = ::KillTimer(m_pDispatch->GetHwnd(), nWndTimer);
+	m_pTimerTranslator->RemoveWidTimer(pWid, nWidTimer);
+	return bRet;
+}
+
+BOOL Timer::GetWidgetFromTimer( UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer )
+{
+	if (m_pTimerTranslator->WndTimerToWidTimer(nWndTimer, pWid, nWidTimer))
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void Timer::Destroy( Widget* pWid )
+{
+	std::vector<UINT_PTR> rgWndTimer;
+	m_pTimerTranslator->RemoveAllWidTimer(pWid, rgWndTimer);
+	for (ULONG i = 0; i < rgWndTimer.size(); i++)
+	{
+		::KillTimer(m_pDispatch->GetHwnd(), rgWndTimer[i]);
+	}
+}
+
 HWID WidDispatch::s_hWidBase = INVALID_HWID;
 
 HINSTANCE WidDispatch::s_hInstance = NULL;
@@ -269,21 +497,13 @@ BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESU
 			}
 			pWid = GetWidPt(pt);
 			if (pWid != NULL
+				&& pWid->IsShow()
 				&& m_h2oLButtonDown.first == pWid->GetHwid()
 				&& m_h2oLButtonDown.second == pWid)
 			{
 				pWid->SendWidMessage(WUM_LBUTTONCLICK, wParam, lParam);
 			}
 			ClearH2O(m_h2oLButtonDown);
-		}
-		break;
-	case WM_TIMER:
-		{
-			pWid = GetWidgetFromTimer((UINT_PTR)wParam);
-			if (pWid != NULL)
-			{
-				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
-			}
 		}
 		break;
 	case WM_KEYDOWN:
@@ -305,6 +525,15 @@ BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESU
 			}
 			HWND hWndChild = (HWND)lParam;
 			lResult = ::SendMessageW(hWndChild, OCM__BASE + uMsg, wParam, lParam);
+			break;
+		}
+	case WM_TIMER:
+		{
+			UINT_PTR nWidTimer = 0;
+			if (GetWidgetFromTimer(wParam, pWid, nWidTimer))
+			{
+				lResult = pWid->SendWidMessage(WM_TIMER, nWidTimer);
+			}
 			break;
 		}
 	default:
@@ -653,19 +882,19 @@ void WidDispatch::SetWidRect( Widget* pWid, const Rect& rc )
 	pWid->SendWidMessage(WM_SIZE, 0, 0);
 }
 
-UINT_PTR WidDispatch::SetWidTimer( Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
+UINT_PTR WidDispatch::SetWidTimer( Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc )
 {
-	return m_pTimer->SetWidTimer(pWid, nIDEvent, uElapse, lpTimerFunc);
+	return m_pTimer->SetWidTimer(pWid, nWidTimer, uElapse, lpTimerFunc);
 }
 
-BOOL WidDispatch::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
+BOOL WidDispatch::KillWidTimer( Widget* pWid, UINT_PTR nWidTimer )
 {
-	return m_pTimer->KillWidTimer(pWid, uIDEvent);
+	return m_pTimer->KillWidTimer(pWid, nWidTimer);
 }
 
-Widget* WidDispatch::GetWidgetFromTimer( UINT_PTR uIDEvent )
+BOOL WidDispatch::GetWidgetFromTimer( UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer )
 {
-	return m_pTimer->GetWidgetFromTimer(uIDEvent);
+	return m_pTimer->GetWidgetFromTimer(nWndTimer, pWid, nWidTimer);
 }
 
 void WidDispatch::Invalidate( const Rect& rc )

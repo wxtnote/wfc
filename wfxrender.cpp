@@ -469,6 +469,17 @@ void WfxRender::DrawProcessBar( HDC hdc, const Rect& rc, WORD wState, ULONG nMax
 	::SelectObject(hdc, hOldFont);
 }
 
+void WfxRender::DrawLine( HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel /*= 1*/ )
+{
+	MoveToEx(hdc, ptStart.x, ptStart.y, NULL);
+	HPEN hPen = ::CreatePen(PS_SOLID, nPixel, clr);
+	HGDIOBJ hGdiObj = ::SelectObject(hdc, hPen);
+	::LineTo(hdc, ptEnd.x, ptEnd.y);
+	::SelectObject(hdc, hGdiObj);
+	::DeleteObject(hPen);
+}
+
+
 HFONT WfxRender::s_hFont = NULL;
 
 

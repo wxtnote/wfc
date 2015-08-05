@@ -539,7 +539,16 @@ LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	if (m_pParent != NULL)
-		return m_pParent->SendWidMessage(uMsg, wParam, lParam);
+	{
+		if (!m_pParent->SendWidMessage(uMsg, wParam, lParam))
+		{
+			Widget* pParent = m_pParent->GetParent();
+			if (pParent != NULL)
+			{
+				return pParent->SendWidMessage(uMsg, wParam, lParam);
+			}
+		}
+	}
 	return 0;
 }
 
@@ -988,78 +997,6 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 void Slider::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	WfxRender::DrawSlider(hdc, GetRect(), GetState(), m_pDispatch);
-}
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-Timer::Timer( WidDispatch* pDispatch )
-: m_pDispatch(pDispatch)
-, m_nTimerID(0x1000)
-{
-
-}
-
-
-UINT_PTR Timer::SetWidTimer( Widget* pWid,
-								   UINT_PTR nIDEvent, UINT uElapse, 
-								   TIMERPROC lpTimerFunc )
-{
-	WFX_CONDITION(m_pDispatch != NULL);
-	WFX_CONDITION(pWid != NULL);
-	WFX_CONDITION(uElapse > 0);
-	PTimerInfo pTI(new TimerInfo);
-	pTI->m_pSender.first = pWid->GetHwid();
-	pTI->m_pSender.second = pWid;
-	pTI->m_hWnd = m_pDispatch->GetHwnd();
-	pTI->m_nRealTimer = GenerateTimerID();
-	pTI->m_nSrcTimer = nIDEvent;
-	m_rgpTimers.push_back(pTI);
-	return ::SetTimer(m_pDispatch->GetHwnd(), pTI->m_nRealTimer, uElapse, lpTimerFunc);
-}
-
-BOOL Timer::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
-{
-	WFX_CONDITION(m_pDispatch != NULL);
-	WFX_CONDITION(pWid!=NULL);
-	PTimerInfo pTimer;
-	for( TimerIter it = m_rgpTimers.begin(); it != m_rgpTimers.end(); ++it ) 
-	{
-		pTimer = *it;
-		if( pTimer->m_pSender.first == pWid->GetHwid()
-			&& pTimer->m_pSender.second == pWid
-			&& pTimer->m_hWnd == m_pDispatch->GetHwnd()
-			&& pTimer->m_nSrcTimer == uIDEvent )
-		{
-			::KillTimer(pTimer->m_hWnd, pTimer->m_nRealTimer);
-			m_rgpTimers.erase(it);
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
-UINT_PTR Timer::GenerateTimerID()
-{
-	m_nTimerID = (++m_nTimerID) % 0xFF;
-	return m_nTimerID;
-}
-
-Widget* Timer::GetWidgetFromTimer( UINT_PTR uIDEvent )
-{
-	PTimerInfo pTimer;
-	for( TimerIter it = m_rgpTimers.begin(); it != m_rgpTimers.end(); ++it ) 
-	{
-		pTimer = *it;
-		if(pTimer->m_hWnd == m_pDispatch->GetHwnd()
-			&& pTimer->m_nRealTimer == uIDEvent )
-		{
-			return pTimer->m_pSender.second;
-		}
-	}
-	return FALSE;
-}
-
-void Timer::Destroy( Widget* pWid )
-{
-
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ImageWid::ImageWid()

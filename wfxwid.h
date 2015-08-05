@@ -95,6 +95,7 @@ class WFX_API Widget :
 {
 	friend class WidDispatch;
 	friend class Timer;
+	friend class TimerTranslator;
 public:
 	typedef std::vector<Widget*> WidList;
 	typedef std::vector<Widget*>::iterator WidIter;
@@ -175,7 +176,7 @@ protected:
 public:
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
-	UINT_PTR SetWidTimer(UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
+	UINT_PTR SetWidTimer(UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc = NULL);
 	BOOL KillWidTimer(UINT_PTR uIDEvent);
 public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -682,24 +683,63 @@ class WFX_API Menu : public InPlaceWnd
 };
 typedef SharedPtr<Menu> PMenu;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-// Timer: helper class for WidDispatch
-struct TimerInfo
+struct TimerKey
 {
-	TimerInfo()
-		: m_nRealTimer(0)
-		, m_hWnd(NULL)
-		, m_nSrcTimer(0)
-	{
-		m_pSender.first = INVALID_HWID;
-		m_pSender.second = NULL;
-	}
-	std::pair<HWID, Widget*> m_pSender;
-	UINT_PTR m_nRealTimer;
-	HWND m_hWnd;
-	UINT_PTR m_nSrcTimer;
+	HWID m_hWid;
+	Widget* m_pWid;
+	TimerKey();
+	TimerKey(HWID hWid, Widget* pWid);
+	bool operator()(const TimerKey& key1, const TimerKey& key2) const;
+	bool operator<(const TimerKey& key) const;
+	bool operator==(const TimerKey& key) const;
+	bool operator!=(const TimerKey& key) const;
 };
-typedef SharedPtr<TimerInfo> PTimerInfo;
-typedef std::vector<PTimerInfo>::iterator TimerIter;
+
+struct TimerValue
+{
+	TimerValue()
+		: m_nWidTimer(0)
+	{
+
+	}
+	TimerValue(const TimerKey& tk, UINT_PTR nWidTimer)
+		: m_tk(tk)
+		, m_nWidTimer(nWidTimer)
+	{
+
+	}
+	TimerKey m_tk;
+	UINT_PTR m_nWidTimer;
+};
+
+typedef std::map<UINT_PTR, UINT_PTR> Timer2Timer;
+
+struct TimerPair
+{
+	Timer2Timer m_WidTimer2WndTimer;
+	Timer2Timer m_WndTimer2WidTimer;
+};
+
+class TimerTranslator
+{
+public:
+	TimerTranslator();
+public:
+	BOOL WidTimerToWndTimer(Widget* pWid, UINT_PTR nWidTimer, UINT_PTR& nWndTimer);
+	BOOL WndTimerToWidTimer(UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer);
+	BOOL RemoveWidTimer(Widget* pWid, UINT_PTR nWidTimer);
+	BOOL RemoveAllWidTimer(Widget* pWid, std::vector<UINT_PTR>& rgWndTimer);
+protected:
+	UINT_PTR GenerateWndTimer();
+	BOOL RecycleWndTimer(UINT_PTR nWndTimer);
+protected:
+	std::map<TimerKey, Timer2Timer> m_WidToWnd;
+	std::map<UINT_PTR, TimerValue> m_WndToWid;
+	UINT_PTR m_nTimerBase;
+};
+
+typedef SharedPtr<TimerTranslator> PTimerTranslator;
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class Timer
 {
@@ -707,17 +747,13 @@ class Timer
 public:
 	Timer(WidDispatch* pDispatch);
 public:
-	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
-	BOOL KillWidTimer(Widget* pWid, UINT_PTR uIDEvent);
-	Widget* GetWidgetFromTimer(UINT_PTR uIDEvent);
+	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc);
+	BOOL KillWidTimer(Widget* pWid, UINT_PTR nWidTimer);
+	BOOL GetWidgetFromTimer(UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer);
 	void Destroy(Widget* pWid);
-	UINT_PTR GenerateTimerID();
 protected:
 	WidDispatch* m_pDispatch;
-	std::map<UINT_PTR, 
-		std::pair<HWID, Widget*> > m_Timer;
-	std::vector<PTimerInfo> m_rgpTimers; 
-	UINT_PTR m_nTimerID;
+	PTimerTranslator m_pTimerTranslator;
 };
 typedef SharedPtr<Timer> PTimer;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -768,9 +804,9 @@ public:
 	void SetScrollInfo(Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw);
 	void GetScrollInfo(Widget* pWid, int nBar, LPSCROLLINFO lpsi);
 	void PreProcessMsg(Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
-	BOOL KillWidTimer(Widget* pWid, UINT_PTR uIDEvent);
-	Widget* GetWidgetFromTimer(UINT_PTR uIDEvent);
+	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc);
+	BOOL KillWidTimer(Widget* pWid, UINT_PTR nWidTimer);
+	BOOL GetWidgetFromTimer(UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer);
 public:
 	static HINSTANCE GetInstance();
 	static void SetInstance(HINSTANCE hInstance);

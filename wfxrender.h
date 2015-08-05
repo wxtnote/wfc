@@ -65,6 +65,7 @@ public:
 		const String& strText, COLORREF clrText, DWORD dwFormat);
 	static void DrawLayerCell(HDC hdc, const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
+	static void DrawLine(HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel = 1);
 	static Size EstimateWidgetSize(const Rect& rc, const String& strText, WORD wState, WidDispatch* pDispatch = NULL);
 	static HFONT GetFontObject();
 protected:

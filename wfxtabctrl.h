@@ -90,4 +90,5 @@ protected:
 	Rect m_rcTabArea;
 };
 
+typedef SharedPtr<TabCtrl> PTabCtrl;
 END_NAMESPACE_WFX

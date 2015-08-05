@@ -14,8 +14,12 @@
 #define WFX_API __declspec(dllexport)
 #else
 #define WFX_API __declspec(dllimport)
+#ifdef _DEBUG
+#pragma comment(lib, "wfcd.lib")
+#else
 #pragma comment(lib, "wfc.lib")
-#endif
+#endif // _DEBUG
+#endif // WFX_EXPORTS
 
 #define BEGIN_NAMESPACE_WFX	//namespace wfx {
 #define END_NAMESPACE_WFX	//	}

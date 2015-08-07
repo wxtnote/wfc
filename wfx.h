@@ -202,12 +202,12 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_TEXT_STATIC		RGB(180, 180, 180)
 #define WID_TEXT_MOUSE		RGB(180, 180, 180)
 #define WID_TEXT_PUSH		RGB(255, 255, 128)
-#define WID_TEXT_CHECKED	RGB(0, 0, 0)
+#define WID_TEXT_CHECKED	RGB(255, 255, 255)
 
-#define WID_FONT_STATIC		L"System"
-#define WID_FONT_MOUSE		L"System"
-#define WID_FONT_PUSH		L"System"
-#define WID_FONT_CHECKED	L"System"
+#define WID_FONT_STATIC		L"свт╡"
+#define WID_FONT_MOUSE		L"свт╡"
+#define WID_FONT_PUSH		L"свт╡"
+#define WID_FONT_CHECKED	L"свт╡"
 
 #define WID_FSIZE_STATIC	10
 #define WID_FSIZE_MOUSE		10
@@ -283,6 +283,7 @@ enum Wfx_Msg
 	WUM_LC_GET_PROPERTIES,
 	WUM_LC_CELL_DRAW,
 	WUM_LC_CELL_EXPAND,
+	WUM_WIDROOT_CREATE,
 	WUM_END
 };
 
@@ -355,6 +356,7 @@ enum Wfx_LC_Param
 BEGIN_NAMESPACE_WFX
 
 typedef SharedPtr<Gdiplus::Image>				PImage;
+#define WFX_GET_IMAGE(filename) Gdiplus::Image::FromFile(filename)
 typedef SharedPtr<LOGFONTW>						PFont;
 
 enum Wid_Type
@@ -362,6 +364,13 @@ enum Wid_Type
 	WT_WIDGET,
 	WT_BUTTON,
 	WT_TEXTBOX,
+};
+
+enum Wid_SysButtonID
+{
+	WID_BTNID_MAX,
+	WID_BTNID_MIN,
+	WID_BTNID_CLOSE
 };
 
 END_NAMESPACE_WFX

@@ -209,6 +209,23 @@ BOOL Widget::HasChild() const
 void Widget::InvalidWid()
 {
 	WFX_CONDITION(m_pDispatch != NULL);
+	if (!IsShow())
+	{
+		return;
+	}
+	Rect rcInvalid = GetRect();
+	Rect rcTemp;
+	Rect rcParent;
+	Widget* pParent = this;
+	while(pParent = pParent->GetParent())
+	{
+		rcTemp = rcInvalid;
+		rcParent = pParent->GetRect();
+		if (!::IntersectRect(&rcInvalid, &rcTemp, &rcParent))
+		{
+			return;
+		}
+	}
 	m_pDispatch->Invalidate(GetRect());
 }
 

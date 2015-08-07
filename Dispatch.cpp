@@ -243,6 +243,7 @@ void Timer::Destroy( Widget* pWid )
 }
 
 HWID WidDispatch::s_hWidBase = INVALID_HWID;
+std::vector<WidDispatch*> WidDispatch::s_rgpDispatch;
 
 HINSTANCE WidDispatch::s_hInstance = NULL;
 WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
@@ -253,11 +254,18 @@ WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
 	ClearH2O(m_h2oFocused);
 	ClearH2O(m_h2oLButtonDown);
 	m_pTimer.reset(new Timer(this));
+	s_rgpDispatch.push_back(this);
 }
 
 WidDispatch::~WidDispatch()
 {
+	std::vector<WidDispatch*>::iterator 
+		it = std::find(s_rgpDispatch.begin(), s_rgpDispatch.end(), this);
 
+	if (it != s_rgpDispatch.end())
+	{
+		s_rgpDispatch.erase(it);
+	}
 }
 
 void WidDispatch::SetHwnd( HWND hWnd )

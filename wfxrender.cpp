@@ -479,6 +479,32 @@ void WfxRender::DrawLine( HDC hdc, const Point& ptStart, const Point& ptEnd, COL
 	::DeleteObject(hPen);
 }
 
+void WfxRender::DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD dwFomat /*= DT_CENTER*/ )
+{
+	LONG nImgWidth = pImage->GetWidth();
+	LONG nImgHeight = pImage->GetHeight();
+	Gdiplus::RectF rcF;
+	rcF.Y = rc.top + (rc.GetHeight() - nImgHeight) / 2;
+	switch(dwFomat)
+	{
+	case DT_LEFT:
+		rcF.X = rc.left;
+		break;
+	case DT_RIGHT:
+		rcF.X = rc.right - nImgWidth;
+		break;
+	case DT_CENTER:
+		rcF.X = rc.left + (rc.GetWidth() - nImgWidth) / 2;
+	default:
+		;
+	}
+	rcF.Width = nImgWidth;
+	rcF.Height = nImgHeight;
+	Gdiplus::Graphics gs(hdc);
+	gs.DrawImage(pImage.get(), rcF);
+}
+
+
 
 HFONT WfxRender::s_hFont = NULL;
 
@@ -503,3 +529,16 @@ WfxRender::RenderClip::RenderClip(HDC hdc, const Rect& rcItem)
 	::ExtSelectClipRgn(m_hDC, m_hRgn, RGN_AND);
 	m_rcItem = rcItem;
 }
+
+WfxRender::GdiPlusHelper::GdiPlusHelper()
+{
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	Gdiplus::GdiplusStartup(&m_nGdiPlusToken, &gdiplusStartupInput, NULL);
+}
+
+WfxRender::GdiPlusHelper::~GdiPlusHelper()
+{
+	Gdiplus::GdiplusShutdown(m_nGdiPlusToken);
+}
+
+WfxRender::GdiPlusHelper gdiplus_init;

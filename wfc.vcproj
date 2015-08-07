@@ -186,6 +186,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cmnwnd.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ComboBox.cpp"
 				>
 			</File>
@@ -301,6 +305,10 @@
 			</File>
 			<File
 				RelativePath=".\wfxcmn.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxcmnwnd.h"
 				>
 			</File>
 			<File

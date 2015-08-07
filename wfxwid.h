@@ -825,7 +825,9 @@ public:
 	static HWID s_hWidBase;
 private:
 	static HINSTANCE s_hInstance;
+	static std::vector<WidDispatch*> s_rgpDispatch;
 };
+
 typedef SharedPtr<WidDispatch> PWidDispatch;
 
 END_NAMESPACE_WFX

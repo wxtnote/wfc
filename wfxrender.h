@@ -43,6 +43,13 @@ public:
 		HRGN m_hRgn;
 		HRGN m_hOldRgn;
 	};
+	class GdiPlusHelper
+	{
+	public:
+		GdiPlusHelper();
+		~GdiPlusHelper();
+		ULONG_PTR m_nGdiPlusToken;
+	};
 public:
 
 	static void DrawWidget(HDC hdc, const String& strText, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
@@ -68,8 +75,11 @@ public:
 	static void DrawLine(HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel = 1);
 	static Size EstimateWidgetSize(const Rect& rc, const String& strText, WORD wState, WidDispatch* pDispatch = NULL);
 	static HFONT GetFontObject();
+	static void DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD dwFomat = DT_CENTER);
 protected:
 	static HFONT s_hFont;
 };
+
+extern WfxRender::GdiPlusHelper gdiplus_init;
 
 END_NAMESPACE_WFX

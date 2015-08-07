@@ -43,7 +43,7 @@ BOOL Window::RegisterWindowClass()
 	wc.style = GetClassStyle();
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hIcon = NULL;
+	wc.hIcon = ::LoadIconW(WidDispatch::GetInstance(), L"pop_logo.png");
 	wc.lpfnWndProc = Window::__WndProc;
 	wc.hInstance = WidDispatch::GetInstance();
 	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
@@ -86,6 +86,7 @@ HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwEx
 	m_hWnd = ::CreateWindowEx(dwExStyle, pszWindowClassName, pszName, dwStyle, 
 		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WidDispatch::GetInstance(), this);
 	WFX_CONDITION(m_hWnd!=NULL);
+	m_pDispatch->SetHwnd(m_hWnd);
 	return m_hWnd;
 }
 
@@ -293,7 +294,7 @@ void Window::SetText( const String& strText )
 
 BOOL Window::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
-	if (m_pDispatch != NULL)
+	if (m_pDispatch != NULL && m_pDispatch->GetHwnd() != NULL)
 	{
 		m_pDispatch->HandleMessage(uMsg, wParam, lParam);
 	}

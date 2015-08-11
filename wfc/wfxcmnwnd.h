@@ -21,8 +21,7 @@ class Window;
 
 class WFX_API CommonWid : public Widget
 {
-	WFX_DECLARE_FACTORY(CommonWid);
-protected:
+public:
 	CommonWid();
 public:
 	WFX_BEGIN_MSG_MAP(CommonWid)
@@ -46,25 +45,27 @@ public:
 		BOOL& bHandled);
 public:
 	virtual BOOL IsCaption(const Point& pt);
+	virtual Rect GetClientRect() const;
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
 	PButton m_pBtnMax;
 	PButton m_pBtnMin;
 	PButton m_pBtnClose;
-	PButton m_pAdd;
 	PImage m_pImage;
 	Rect m_rcCaption;
+	Rect m_rcClient;
 };
 
 typedef CommonWid RootWid;
 typedef SharedPtr<RootWid> PRootWid;
-typedef SharedPtr<Factory<CommonWid> > PRootFactory;
 
-class WFX_API CommonWnd : public Window
+class WFX_API CommonWnd : public WidgetWnd
 {
 public:
-	CommonWnd(const PRootFactory& pRootFactory);
+	CommonWnd();
+public:
+	virtual BOOL Initialize();
 public:
 	BOOL Create(const String& strName, const Rect& rc, HWND hParent = NULL);
 public:
@@ -76,10 +77,10 @@ public:
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
-	WFX_CHAIN_MSG_MAP(Window)
+	WFX_CHAIN_MSG_MAP(WidgetWnd)
 	WFX_END_MSG_MAP()
 public:
-	virtual LPCTSTR GetWindowClassName() const;
+	virtual LPCWSTR GetWindowClassName() const;
 	virtual UINT GetClassStyle() const;
 public:
 	wfx_msg LRESULT OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -98,7 +99,6 @@ public:
 		BOOL& bHandled);
 protected:
 	PRootWid m_pRoot;
-	PRootFactory m_pRootFactory;
 };
 
 typedef SharedPtr<CommonWnd> PCommonWnd;
@@ -106,7 +106,7 @@ typedef SharedPtr<CommonWnd> PCommonWnd;
 class WFX_API FrameWnd : public CommonWnd
 {
 public:
-	FrameWnd(const PRootFactory& pWidFactory);
+	FrameWnd();
 public:
 	WFX_BEGIN_MSG_MAP(FrameWnd)
 		WFX_MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
@@ -121,5 +121,13 @@ public:
 };
 
 typedef SharedPtr<FrameWnd> PFrameWnd;
+
+class WFX_API Dialog : public CommonWnd
+{
+public:
+	int DoModal();
+};
+
+WFX_API int WfxMessageBox(const String& strText);
 
 END_NAMESPACE_WFX

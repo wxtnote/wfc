@@ -52,19 +52,19 @@ public:
 	};
 public:
 
-	static void DrawWidget(HDC hdc, const String& strText, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawButtton(HDC hdc, const String& strText, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawTextBox(HDC hdc, const String& strText, const Rect& rc, WORD wState, WORD wMode, WidDispatch* pDispatch = NULL);
-	static void DrawCheckBoxItem(HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch = NULL);
-	static void DrawCheckBox(HDC hdc, const String& strText, const Rect& rc, WORD wState, ULONG nTextOffset, WidDispatch* pDispatch = NULL);
-	static void DrawRadioBoxItem(HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch = NULL);
-	static void DrawRadioBox(HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawProcessBar(HDC hdc, const Rect& rc, WORD wState, ULONG nMax, ULONG nPos, WidDispatch* pDispatch = NULL);
-	static void DrawSolidRect(HDC hdc, const Rect& rcPaint, COLORREF clr, WidDispatch* pDispatch = NULL);
-	static void DrawFrame(HDC hdc, const Rect& rcPaint, COLORREF clr, WidDispatch* pDispatch = NULL);
-	static void DrawText(HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, WidDispatch* pDispatch = NULL);
-	static void DrawSlider(HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawArror(HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawWidget(HDC hdc, const String& strText, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawButtton(HDC hdc, const String& strText, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawTextBox(HDC hdc, const String& strText, const Rect& rc, WORD wState, WORD wMode, Dispatcher* pDispatch = NULL);
+	static void DrawCheckBoxItem(HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, Dispatcher* pDispatch = NULL);
+	static void DrawCheckBox(HDC hdc, const String& strText, const Rect& rc, WORD wState, ULONG nTextOffset, Dispatcher* pDispatch = NULL);
+	static void DrawRadioBoxItem(HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, Dispatcher* pDispatch = NULL);
+	static void DrawRadioBox(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawProcessBar(HDC hdc, const Rect& rc, WORD wState, ULONG nMax, ULONG nPos, Dispatcher* pDispatch = NULL);
+	static void DrawSolidRect(HDC hdc, const Rect& rcPaint, COLORREF clr, Dispatcher* pDispatch = NULL);
+	static void DrawFrame(HDC hdc, const Rect& rcPaint, COLORREF clr, Dispatcher* pDispatch = NULL);
+	static void DrawText(HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, Dispatcher* pDispatch = NULL);
+	static void DrawSlider(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawArror(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
 	static void GenerateClip(HDC hdc, const Rect& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const Rect& rcPaint,  DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
@@ -73,7 +73,7 @@ public:
 	static void DrawLayerCell(HDC hdc, const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
 	static void DrawLine(HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel = 1);
-	static Size EstimateWidgetSize(const Rect& rc, const String& strText, WORD wState, WidDispatch* pDispatch = NULL);
+	static Size EstimateWidgetSize(const Rect& rc, const String& strText, WORD wState, Dispatcher* pDispatch = NULL);
 	static HFONT GetFontObject();
 	static void DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD dwFomat = DT_CENTER);
 protected:

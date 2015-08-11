@@ -23,8 +23,8 @@ CheckBoxItem::CheckBoxItem()
 
 CheckBoxItem::CheckBoxItem(const String& strChecked,
 						   const String& strUnCheck)
-						   : m_pImageChecked(Gdiplus::Image::FromFile(strChecked.c_str()))
-						   , m_pImageUnCheck(Gdiplus::Image::FromFile(strUnCheck.c_str()))
+						   : m_pImageChecked(WFX_GET_IMAGE(strChecked.c_str()))
+						   , m_pImageUnCheck(WFX_GET_IMAGE(strUnCheck.c_str()))
 {
 
 }
@@ -73,5 +73,5 @@ LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
 void CheckBox::OnDraw( HDC hdc, const Rect& rcPaint )
 {
- WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), GetState(), m_lOffset, m_pDispatch);
+	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), GetState(), m_lOffset, m_pDispatch);
 }

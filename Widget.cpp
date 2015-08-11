@@ -22,8 +22,7 @@ LRESULT MsgMap::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 AttrBase::AttrBase(Widget* pParent /*= NULL*/)
-: m_strText(L"")
-, m_dwFormat(DT_SINGLELINE | DT_VCENTER | DT_LEFT)
+: m_dwFormat(DT_SINGLELINE | DT_VCENTER | DT_LEFT)
 , m_clrText(WID_TEXT_STATIC)
 , m_clrBkgnd(WID_BKGND_STATIC)
 , m_clrFrame(WID_FRAME_STATIC)
@@ -85,7 +84,7 @@ COLORREF AttrBase::GetFrame() const
 
 void AttrBase::SetImage( const String& strImage )
 {
-	m_pImg.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+	m_pImg.reset(WFX_GET_IMAGE(strImage.c_str()));
 }
 
 PImage AttrBase::GetImage() const
@@ -121,6 +120,15 @@ Widget* AttrBase::GetParent() const
 void AttrBase::SetParent( Widget* pParent )
 {
 	m_pParent = pParent;
+}
+String AttrBase::GetToolTip() const
+{
+	return m_strText;
+}
+
+void AttrBase::SetToolTip( const String& strToolTip )
+{
+	m_strToolTip = strToolTip;
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Widget::Widget(void)
@@ -171,7 +179,7 @@ Rect Widget::GetParentRect() const
 	return rcParent;
 }
 
-BOOL Widget::Create( const Rect& rc, WidDispatch* pDispatch, 
+BOOL Widget::Create( const Rect& rc, Dispatcher* pDispatch, 
 					Widget* pParent /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
 	WFX_CONDITION(pDispatch != NULL);
@@ -1025,10 +1033,10 @@ ImageWid::ImageWid(const String& strStatic,
 				   const String& strMouse, 
 				   const String& strPush,
 				   const String& strChecked)
-				   : m_pStatic(Gdiplus::Image::FromFile(strStatic.c_str()))
-				   , m_pMouse(Gdiplus::Image::FromFile(strMouse.c_str()))
-				   , m_pPush(Gdiplus::Image::FromFile(strPush.c_str()))
-				   , m_pChecked(Gdiplus::Image::FromFile(strChecked.c_str()))
+				   : m_pImgStatic(WFX_GET_IMAGE(strStatic.c_str()))
+				   , m_pImgMouse(WFX_GET_IMAGE(strMouse.c_str()))
+				   , m_pImgPush(WFX_GET_IMAGE(strPush.c_str()))
+				   , m_pImgChecked(WFX_GET_IMAGE(strChecked.c_str()))
 {
 }
 
@@ -1037,16 +1045,16 @@ void ImageWid::SetImage( WORD wState, const String& strImage )
 	switch(wState)
 	{
 	case WID_STATE_STATIC:
-		m_pStatic.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		m_pImgStatic.reset(WFX_GET_IMAGE(strImage.c_str()));
 		break;
 	case WID_STATE_MOUSE:
-		m_pMouse.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		m_pImgMouse.reset(WFX_GET_IMAGE(strImage.c_str()));
 		break;
 	case WID_STATE_PUSH:
-		m_pPush.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		m_pImgPush.reset(WFX_GET_IMAGE(strImage.c_str()));
 		break;
 	case WID_STATE_CHECKED:
-		m_pChecked.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		m_pImgChecked.reset(WFX_GET_IMAGE(strImage.c_str()));
 		break;
 	default:
 		WFX_CONDITION(FALSE);
@@ -1058,10 +1066,10 @@ void ImageWid::SetImage( const String& strStatic,
 						const String& strPush,
 						const String& strChecked)
 {
-	m_pStatic.reset(Gdiplus::Image::FromFile(strStatic.c_str()));
-	m_pMouse.reset(Gdiplus::Image::FromFile(strMouse.c_str()));
-	m_pPush.reset(Gdiplus::Image::FromFile(strPush.c_str()));
-	m_pChecked.reset(Gdiplus::Image::FromFile(strChecked.c_str()));
+	m_pImgStatic.reset(WFX_GET_IMAGE(strStatic.c_str()));
+	m_pImgMouse.reset(WFX_GET_IMAGE(strMouse.c_str()));
+	m_pImgPush.reset(WFX_GET_IMAGE(strPush.c_str()));
+	m_pImgChecked.reset(WFX_GET_IMAGE(strChecked.c_str()));
 }
 
 PImage ImageWid::GetImageFromState()
@@ -1070,20 +1078,20 @@ PImage ImageWid::GetImageFromState()
 	switch(GetState())
 	{
 	case WID_STATE_STATIC:
-		pImage = m_pStatic;
+		pImage = m_pImgStatic;
 		break;
 	case WID_STATE_MOUSE:
-		pImage = m_pMouse;
+		pImage = m_pImgMouse;
 		break;
 	case WID_STATE_PUSH:
-		pImage = m_pPush;
+		pImage = m_pImgPush;
 		break;
 	case WID_STATE_CHECKED:
-		pImage = m_pChecked;
+		pImage = m_pImgChecked;
 		break;
 	default:
 		WFX_CONDITION(FALSE);
-		pImage = m_pStatic;
+		pImage = m_pImgStatic;
 	}
 	return pImage;
 }

@@ -14,8 +14,7 @@
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Window::Window()
-: m_pDispatch(new WidDispatch)
-, m_hWnd(NULL)
+: m_hWnd(NULL)
 , m_OldWndProc(::DefWindowProc)
 , m_bSubclassed(FALSE)
 {
@@ -24,7 +23,7 @@ Window::Window()
 
 Window::~Window()
 {
-
+	TDELWND(m_hWnd);
 }
 
 HWND Window::GetHwnd() const
@@ -43,9 +42,9 @@ BOOL Window::RegisterWindowClass()
 	wc.style = GetClassStyle();
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hIcon = ::LoadIconW(WidDispatch::GetInstance(), L"pop_logo.png");
+	wc.hIcon = ::LoadIconW(Dispatcher::GetInstance(), L"pop_logo.png");
 	wc.lpfnWndProc = Window::__WndProc;
-	wc.hInstance = WidDispatch::GetInstance();
+	wc.hInstance = Dispatcher::GetInstance();
 	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName  = NULL;
@@ -70,7 +69,7 @@ BOOL Window::RegisterSuperClass()
 	}
 	m_OldWndProc = wc.lpfnWndProc;
 	wc.lpfnWndProc = Window::__ControlProc;
-	wc.hInstance = WidDispatch::GetInstance();
+	wc.hInstance = Dispatcher::GetInstance();
 	wc.lpszClassName = GetWindowClassName();
 	ATOM ret = ::RegisterClassExW(&wc);
 	DWORD dwError = ::GetLastError();
@@ -78,15 +77,15 @@ BOOL Window::RegisterSuperClass()
 	return ret != NULL || ::GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
 }
 
-HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwExStyle, const Rect& rc, HMENU hMenu /*= NULL*/ )
+HWND Window::Create( HWND hwndParent, LPCWSTR pszName, DWORD dwStyle, DWORD dwExStyle, const Rect& rc, HMENU hMenu /*= NULL*/ )
 {
+	WFX_CONDITION(m_hWnd == NULL);
 	if( GetSuperClassName() != NULL && !RegisterSuperClass() ) return NULL;
 	if( GetSuperClassName() == NULL && !RegisterWindowClass() ) return NULL;
-	LPCTSTR pszWindowClassName = GetWindowClassName();
-	m_hWnd = ::CreateWindowEx(dwExStyle, pszWindowClassName, pszName, dwStyle, 
-		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WidDispatch::GetInstance(), this);
+	LPCWSTR pszWindowClassName = GetWindowClassName();
+	::CreateWindowExW(dwExStyle, pszWindowClassName, pszName, dwStyle, 
+		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, Dispatcher::GetInstance(), this);
 	WFX_CONDITION(m_hWnd!=NULL);
-	m_pDispatch->SetHwnd(m_hWnd);
 	return m_hWnd;
 }
 
@@ -111,7 +110,7 @@ void Window::UnSubClass()
 	m_bSubclassed = FALSE;
 }
 
-void Window::ShoWidWnd( BOOL bShow /*= TRUE*/, BOOL bTakeFocus /*= TRUE*/ )
+void Window::ShowWindow( BOOL bShow /*= TRUE*/, BOOL bTakeFocus /*= TRUE*/ )
 {
 	WFX_CONDITION(::IsWindow(m_hWnd));
 	if( !::IsWindow(m_hWnd) ) return;
@@ -120,7 +119,29 @@ void Window::ShoWidWnd( BOOL bShow /*= TRUE*/, BOOL bTakeFocus /*= TRUE*/ )
 
 BOOL Window::ShowModal()
 {
-	return FALSE;
+	WFX_CONDITION(::IsWindow(m_hWnd));
+    UINT nRet = 0;
+    HWND hWndParent = GetWindowOwner(m_hWnd);
+	CenterWindow();
+    ::ShowWindow(m_hWnd, SW_SHOWNORMAL);
+    ::EnableWindow(hWndParent, FALSE);
+    MSG msg = { 0 };
+    while( ::IsWindow(m_hWnd) && ::GetMessage(&msg, NULL, 0, 0) ) {
+        if( msg.message == WM_CLOSE && msg.hwnd == m_hWnd ) {
+            nRet = msg.wParam;
+            ::EnableWindow(hWndParent, TRUE);
+            ::SetFocus(hWndParent);
+        }
+        if( 1 ) {
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+        }
+        if( msg.message == WM_QUIT ) break;
+    }
+    ::EnableWindow(hWndParent, TRUE);
+    ::SetFocus(hWndParent);
+    if( msg.message == WM_QUIT ) ::PostQuitMessage(msg.wParam);
+    return nRet;
 }
 
 void Window::Close()
@@ -168,7 +189,12 @@ void Window::SetIcon( UINT nRes )
 	::SendMessage(m_hWnd, WM_SETICON, (WPARAM) FALSE, (LPARAM) hIcon);
 }
 
-LPCTSTR Window::GetSuperClassName() const
+LPCWSTR Window::GetWindowClassName() const
+{
+	return NULL;
+}
+
+LPCWSTR Window::GetSuperClassName() const
 {
 	return NULL;
 }
@@ -208,6 +234,11 @@ void Window::OnFinalMessage( HWND hWnd )
 	
 }
 
+void Window::OnInitialMessage( HWND hWnd )
+{
+
+}
+
 LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	Window* pThis = NULL;
@@ -215,6 +246,7 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
 		pThis = static_cast<Window*>(lpcs->lpCreateParams);
 		pThis->m_hWnd = hWnd;
+		pThis->OnInitialMessage(hWnd);
 		::SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(pThis));
 	} 
 	else {
@@ -223,8 +255,8 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 			LRESULT lRes = ::CallWindowProc(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
 			::SetWindowLongPtr(pThis->m_hWnd, GWLP_USERDATA, 0L);
 			if( pThis->m_bSubclassed ) pThis->UnSubClass();
-			pThis->m_hWnd = NULL;
 			pThis->OnFinalMessage(hWnd);
+			pThis->m_hWnd = NULL;
 			return lRes;
 		}
 	}
@@ -246,6 +278,7 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		pThis = static_cast<Window*>(lpcs->lpCreateParams);
 		::SetPropW(hWnd, L"WndX", (HANDLE) pThis);
 		pThis->m_hWnd = hWnd;
+		pThis->OnInitialMessage(hWnd);
 	} 
 	else {
 		pThis = reinterpret_cast<Window*>(::GetPropW(hWnd, L"WndX"));
@@ -253,8 +286,8 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 			LRESULT lRes = ::CallWindowProc(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
 			if( pThis->m_bSubclassed ) pThis->UnSubClass();
 			::SetPropW(hWnd, L"WndX", NULL);
-			pThis->m_hWnd = NULL;
 			pThis->OnFinalMessage(hWnd);
+			pThis->m_hWnd = NULL;
 			return lRes;
 		}
 	}
@@ -294,10 +327,6 @@ void Window::SetText( const String& strText )
 
 BOOL Window::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
-	if (m_pDispatch != NULL && m_pDispatch->GetHwnd() != NULL)
-	{
-		m_pDispatch->HandleMessage(uMsg, wParam, lParam);
-	}
 	lResult = ::CallWindowProc(m_OldWndProc, m_hWnd, uMsg, wParam, lParam);
 	return TRUE;
 }
@@ -311,6 +340,58 @@ void Window::GetClientRect( Rect& rc )
 UINT_PTR Window::SetTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc ) const
 {
 	return ::SetTimer(m_hWnd, nIDEvent, uElapse, lpTimerFunc);
+}
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+ToolTipWnd::ToolTipWnd()
+: m_pToolInfo(new TOOLINFOW)
+{
+
+}
+void ToolTipWnd::DoToolTip( HWND hParent, const Rect& rc, const String& strToolTip )
+{
+	 ::ZeroMemory(m_pToolInfo.get(), sizeof(TOOLINFOW));
+	m_pToolInfo->cbSize = TTTOOLINFOA_V2_SIZE;
+	m_pToolInfo->uFlags = TTF_IDISHWND;
+	m_pToolInfo->hwnd = hParent;
+	m_pToolInfo->uId = (UINT_PTR) hParent;
+	m_pToolInfo->hinst = Dispatcher::GetInstance();
+	m_pToolInfo->lpszText = const_cast<LPWSTR>( (LPCWSTR) strToolTip.c_str() );
+	m_pToolInfo->rect = rc;
+	if( m_hWnd == NULL ) {
+		m_hWnd = ::CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 
+			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, 
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
+			hParent, NULL, Dispatcher::GetInstance(), NULL);
+		SendMessage(TTM_ADDTOOL, 0, (LPARAM)m_pToolInfo.get());
+	}
+	SendMessage(TTM_SETTOOLINFO, 0, (LPARAM)m_pToolInfo.get());
+	SendMessage(TTM_TRACKACTIVATE, TRUE, (LPARAM)m_pToolInfo.get());
+}
+void ToolTipWnd::EndToolTip()
+{
+	if (::IsWindow(m_hWnd))
+	{
+		SendMessage(TTM_TRACKACTIVATE, FALSE, (LPARAM)m_pToolInfo.get());
+	}
+}
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+WidgetWnd::WidgetWnd()
+: m_pDispatch(new Dispatcher)
+{
+
+}
+
+BOOL WidgetWnd::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+{
+	WFX_CONDITION(m_pDispatch->GetHwnd() != NULL);
+	WFX_CONDITION(::IsWindow(m_pDispatch->GetHwnd()));
+	m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+	lResult = ::CallWindowProcW(m_OldWndProc, m_hWnd, uMsg, wParam, lParam);
+	return TRUE;
+}
+void WidgetWnd::OnInitialMessage( HWND hWnd )
+{
+	m_pDispatch->SetHwnd(hWnd);
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 InPlaceWnd::InPlaceWnd()

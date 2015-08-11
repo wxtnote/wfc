@@ -42,12 +42,12 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	return m_hWnd;
 }
 
-LPCTSTR TextBoxWnd::GetWindowClassName() const
+LPCWSTR TextBoxWnd::GetWindowClassName() const
 {
 	return L"TextBoxWnd";
 }
 
-LPCTSTR TextBoxWnd::GetSuperClassName() const
+LPCWSTR TextBoxWnd::GetSuperClassName() const
 {
 	return WC_EDITW;
 }

@@ -25,18 +25,22 @@
 #define END_NAMESPACE_WFX	//	}
 #define USING_NAMESPACE_WFX	//using namespace wfx;
 
+#include <Windows.h>
+#include <WindowsX.h>
+#include <tchar.h>
 #include <xstring>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <map>
 #include <algorithm>
-#include <windowsx.h>
 #include <CommCtrl.h>
 #include <OleCtl.h>
 #include <memory>
 #include <GdiPlus.h>
 #pragma comment(lib, "gdiplus.lib")
+#pragma comment( lib, "winmm.lib" )
+#pragma comment( lib, "comctl32.lib" )
 
 #pragma warning(disable:4251)
 #pragma warning(disable:4244)
@@ -170,6 +174,10 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define TDELA(p) if ((p) != NULL) { delete[] (p); (p) = NULL; }
 #endif
 
+#ifndef TDELWND
+#define TDELWND(p) if (::IsWindow((p))) { ::DestroyWindow((p)); (p) = NULL;}
+#endif
+
 #define INVALID_HWID NULL
 
 #define SIZE_SCROLLBAR 11
@@ -189,7 +197,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_STATE_CHECKED	3
 
 // Widget State Color
-#define WID_BKGND_STATIC	RGB(255, 255, 255)
+#define WID_BKGND_STATIC	RGB(0, 0, 0)
 #define WID_BKGND_MOUSE		RGB(60, 60, 60)
 #define WID_BKGND_PUSH		RGB(179, 224, 249)
 #define WID_BKGND_CHECKED	RGB(201, 234, 252)
@@ -214,7 +222,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_FSIZE_PUSH		10
 #define WID_FSIZE_CHECKED	10
 
-#define WBTN_BKGND_STATIC	RGB(255, 255, 255)
+#define WBTN_BKGND_STATIC	RGB(0, 0, 0)
 #define WBTN_BKGND_MOUSE	RGB(77, 137, 193)
 #define WBTN_BKGND_PUSH		RGB(77, 137, 193)
 #define WBTN_BKGND_CHECKED	RGB(77, 137, 193)
@@ -224,7 +232,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WBTN_FRAME_PUSH		RGB(77, 137, 193)
 #define WBTN_FRAME_CHECKED	RGB(77, 137, 193)
 
-#define WTXB_BKGND_STATIC	RGB(255, 255, 255)
+#define WTXB_BKGND_STATIC	RGB(0, 0, 0)
 #define WTXB_BKGND_MOUSE	WTXB_BKGND_STATIC
 #define WTXB_BKGND_PUSH		WTXB_BKGND_STATIC
 #define WTXB_BKGND_CHECKED	WTXB_BKGND_STATIC
@@ -358,6 +366,7 @@ BEGIN_NAMESPACE_WFX
 typedef SharedPtr<Gdiplus::Image>				PImage;
 #define WFX_GET_IMAGE(filename) Gdiplus::Image::FromFile(filename)
 typedef SharedPtr<LOGFONTW>						PFont;
+typedef SharedPtr<TOOLINFOW>					PToolInfo;
 
 enum Wid_Type
 {

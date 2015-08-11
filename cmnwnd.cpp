@@ -22,7 +22,7 @@ CommonWid::CommonWid()
 , m_pBtnClose(new Button)
 , m_pImage(WFX_GET_IMAGE(L"E:\\prj\\wfxdev\\bind\\pop_logo.png"))
 {
-	m_pImage.reset(Gdiplus::Image::FromFile(L"E:\\prj\\wfxdev\\bind\\pop_logo.png"));
+	m_pImage.reset(WFX_GET_IMAGE(L"E:\\prj\\wfxdev\\bind\\pop_logo.png"));
 	m_pBtnMax->SetText(L"¿Ú");
 	m_pBtnMin->SetText(L"¡ª");
 	m_pBtnClose->SetText(L"X");
@@ -37,7 +37,6 @@ LRESULT CommonWid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	m_pBtnMax->Create(rc, m_pDispatch, this);
 	m_pBtnMin->Create(rc, m_pDispatch, this);
 	m_pBtnClose->Create(rc, m_pDispatch, this);
-	m_pAdd->Create(rc, m_pDispatch, this);
 	return 1;
 }
 
@@ -45,6 +44,7 @@ LRESULT CommonWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 {
 	Rect rcWid = GetRect();
 	m_rcCaption = rcWid;
+	m_rcClient = rcWid;
 	rcWid.bottom = rcWid.top + 20;
 	m_rcCaption.bottom = rcWid.bottom;
 	rcWid.left = rcWid.right - 20;
@@ -57,7 +57,7 @@ LRESULT CommonWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	m_pBtnMin->SetRect(rcWid);
 
 	m_rcCaption.right = rcWid.left - 2;
-
+	m_rcClient.top = m_rcCaption.bottom;
 	return 1;
 }
 
@@ -91,6 +91,12 @@ BOOL CommonWid::IsCaption( const Point& pt )
 	return FALSE;
 }
 
+
+Rect CommonWid::GetClientRect() const
+{
+	return m_rcClient;
+}
+
 void CommonWid::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	__super::OnDraw(hdc, rcPaint);
@@ -98,21 +104,21 @@ void CommonWid::OnDraw( HDC hdc, const Rect& rcPaint )
 	rcImage.left += 2;
 	rcImage.top += 1;
 	WfxRender::DrawImage(hdc, m_pImage, rcImage, DT_LEFT);
-	Rect rcText = m_rcCaption;
-	rcText.left = rcImage.left + 20;
-	WCHAR szText[255];
-	::GetWindowTextW(m_pDispatch->GetHwnd(), szText, 255);
-	WfxRender::DrawText(hdc, rcText, szText, WBTN_BKGND_MOUSE, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
 }
 
-CommonWnd::CommonWnd(const PRootFactory& pRootFactory)
-: m_pRootFactory(pRootFactory)
+CommonWnd::CommonWnd()
 {
+}
+
+BOOL CommonWnd::Initialize()
+{
+	m_pRoot.reset(new CommonWid);
+	return TRUE;
 }
 
 LRESULT CommonWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	m_pRoot = m_pRootFactory->CreateObject();
+	WFX_CONDITION(m_pRoot != NULL);
 	LONG styleValue = ::GetWindowLong(*this, GWL_STYLE);
 	styleValue &= ~WS_CAPTION;
 	::SetWindowLong(*this, GWL_STYLE, styleValue | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
@@ -144,6 +150,14 @@ LRESULT CommonWnd::OnGetMinMaxInfo( UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 	lpMMI->ptMaxPosition.y	= rcWork.top;
 	lpMMI->ptMaxSize.x		= rcWork.right;
 	lpMMI->ptMaxSize.y		= rcWork.bottom;
+	if (IsMaximized(*this))
+	{
+		m_pRoot->SendWidMessage(WM_SYSCOMMAND, SC_MAXIMIZE);
+	}
+	else
+	{
+		m_pRoot->SendWidMessage(WM_SYSCOMMAND, SC_RESTORE);
+	}
 	return 1;
 }
 
@@ -153,7 +167,7 @@ BOOL CommonWnd::Create( const String& strName, const Rect& rc, HWND hParent /*= 
 	return TRUE;
 }
 
-LPCTSTR CommonWnd::GetWindowClassName() const
+LPCWSTR CommonWnd::GetWindowClassName() const
 {
 	return L"WidgetFoundationClass";
 }
@@ -177,6 +191,27 @@ LRESULT CommonWnd::OnNCHitTest( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
 	Point pt(lParam);
 	::ScreenToClient(m_hWnd, &pt);
+	Rect rcClient;
+	GetClientRect(rcClient);
+	if( !::IsZoomed(*this) ) {
+		Rect rcSizeBox;
+		rcSizeBox.left = 4;
+		rcSizeBox.right = 6;
+		rcSizeBox.top = 4;
+		rcSizeBox.bottom = 6;
+		if( pt.y < rcClient.top + rcSizeBox.top ) {
+			if( pt.x < rcClient.left + rcSizeBox.left ) return HTTOPLEFT;
+			if( pt.x > rcClient.right - rcSizeBox.right ) return HTTOPRIGHT;
+			return HTTOP;
+		}
+		else if( pt.y > rcClient.bottom - rcSizeBox.bottom ) {
+			if( pt.x < rcClient.left + rcSizeBox.left ) return HTBOTTOMLEFT;
+			if( pt.x > rcClient.right - rcSizeBox.right ) return HTBOTTOMRIGHT;
+			return HTBOTTOM;
+		}
+		if( pt.x < rcClient.left + rcSizeBox.left ) return HTLEFT;
+		if( pt.x > rcClient.right - rcSizeBox.right ) return HTRIGHT;
+	}
 	return m_pRoot->IsCaption(pt)? HTCAPTION : HTCLIENT;
 }
 
@@ -185,8 +220,7 @@ LRESULT CommonWnd::OnNCCalcSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 	return 0;
 }
 
-FrameWnd::FrameWnd( const PRootFactory& pRootFactory )
-: CommonWnd(pRootFactory)
+FrameWnd::FrameWnd()
 {
 
 }
@@ -200,5 +234,19 @@ LRESULT FrameWnd::OnNCActivate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 LRESULT FrameWnd::OnClose( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	PostQuitMessage(0);
+	return 1;
+}
+
+int Dialog::DoModal()
+{
+	Rect rc(0, 0, 200, 200);
+	Initialize();
+	Create(L"Dialog", rc, WfxDispatcher::GetMainWnd());
+	ShowModal();
+	return 1;
+}
+
+int WfxMessageBox( const String& strText )
+{
 	return 1;
 }

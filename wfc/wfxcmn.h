@@ -40,7 +40,7 @@ struct WFX_API HeaderInfo
 	}
 	void SetImage(const String& strFile)
 	{
-		pImage.reset(Gdiplus::Image::FromFile(strFile.c_str()));
+		pImage.reset(WFX_GET_IMAGE(strFile.c_str()));
 	}
 };
 typedef SharedPtr<HeaderInfo> PHeaderInfo;

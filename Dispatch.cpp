@@ -186,7 +186,7 @@ BOOL TimerTranslator::RecycleWndTimer(UINT_PTR nWndTimer)
 }
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-Timer::Timer( WidDispatch* pDispatch )
+Timer::Timer( Dispatcher* pDispatch )
 : m_pDispatch(pDispatch)
 , m_pTimerTranslator(new TimerTranslator)
 {
@@ -242,12 +242,14 @@ void Timer::Destroy( Widget* pWid )
 	}
 }
 
-HWID WidDispatch::s_hWidBase = INVALID_HWID;
-std::vector<WidDispatch*> WidDispatch::s_rgpDispatch;
+HWID Dispatcher::s_hWidBase = INVALID_HWID;
+std::vector<Dispatcher*> Dispatcher::s_rgpDispatch;
 
-HINSTANCE WidDispatch::s_hInstance = NULL;
-WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
+HINSTANCE Dispatcher::s_hInstance = NULL;
+HWND Dispatcher::s_hMainWnd = NULL;
+Dispatcher::Dispatcher( HWND hWnd /*= NULL*/ )
 : m_hWnd(hWnd)
+, m_pToolTipWnd(new ToolTipWnd)
 {
 	ClearH2O(m_h2oLastMouseMove);
 	ClearH2O(m_h2oCaptured);
@@ -255,11 +257,12 @@ WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
 	ClearH2O(m_h2oLButtonDown);
 	m_pTimer.reset(new Timer(this));
 	s_rgpDispatch.push_back(this);
+	m_bMouseTracking = FALSE;
 }
 
-WidDispatch::~WidDispatch()
+Dispatcher::~Dispatcher()
 {
-	std::vector<WidDispatch*>::iterator 
+	std::vector<Dispatcher*>::iterator 
 		it = std::find(s_rgpDispatch.begin(), s_rgpDispatch.end(), this);
 
 	if (it != s_rgpDispatch.end())
@@ -268,17 +271,17 @@ WidDispatch::~WidDispatch()
 	}
 }
 
-void WidDispatch::SetHwnd( HWND hWnd )
+void Dispatcher::SetHwnd( HWND hWnd )
 {
 	m_hWnd = hWnd;
 }
 
-HWND WidDispatch::GetHwnd() const
+HWND Dispatcher::GetHwnd() const
 {
 	return m_hWnd;
 }
 
-BOOL WidDispatch::Create( Widget* pThis )
+BOOL Dispatcher::Create( Widget* pThis )
 {
 	WFX_CONDITION(pThis != NULL);
 	WFX_CONDITION(pThis->GetHwid() == INVALID_HWID);
@@ -294,7 +297,7 @@ BOOL WidDispatch::Create( Widget* pThis )
 	return TRUE;
 }
 
-BOOL WidDispatch::Destroy( HWID& hWid )
+BOOL Dispatcher::Destroy( HWID& hWid )
 {
 	std::map<HWID, Widget*>::iterator it =
 		m_Handle2Object.find(hWid);
@@ -325,17 +328,17 @@ BOOL WidDispatch::Destroy( HWID& hWid )
 	return TRUE;
 }
 
-HWID WidDispatch::GenerateHwid()
+HWID Dispatcher::GenerateHwid()
 {
 	return ++s_hWidBase;
 }
 
-void WidDispatch::RecycleHwid( HWID& hWid )
+void Dispatcher::RecycleHwid( HWID& hWid )
 {
 	hWid = INVALID_HWID;
 }
 
-void WidDispatch::DrawWid( Widget* pWid, const Rect& rcPaint )
+void Dispatcher::DrawWid( Widget* pWid, const Rect& rcPaint )
 {
 	WFX_CONDITION(m_hWnd != NULL);
 	WFX_CONDITION(pWid != NULL);
@@ -351,7 +354,7 @@ void WidDispatch::DrawWid( Widget* pWid, const Rect& rcPaint )
 	__end_mem_draw;
 }
 
-void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const Rect& rcPaint)
+void Dispatcher::DrawGen( Widget* pWid, HDC hdc, const Rect& rcPaint)
 {
 	WFX_CONDITION(pWid != NULL);
 	Rect rcTemp;
@@ -377,7 +380,7 @@ void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const Rect& rcPaint)
 	}
 }
 
-LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT Dispatcher::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 1;
 	Point pt(lParam);
@@ -400,157 +403,241 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 	
 }
 
-BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+LRESULT Dispatcher::OnEraseBkgnd( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	return 1;
+}
+
+LRESULT Dispatcher::OnPaint( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Rect rcPaint;
+	if( !::GetUpdateRect(m_hWnd, &rcPaint, FALSE) ) 
+		return 1;
+	PAINTSTRUCT ps;
+	::BeginPaint(m_hWnd, &ps);
+	OnPaint(ps.rcPaint);
+	::EndPaint(m_hWnd, &ps);
+	return 1;
+}
+
+LRESULT Dispatcher::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (!m_bMouseTracking)
+	{
+		TRACKMOUSEEVENT tme = { 0 };
+		tme.cbSize = sizeof(TRACKMOUSEEVENT);
+		tme.dwFlags = TME_HOVER | TME_LEAVE;
+		tme.hwndTrack = m_hWnd;
+		tme.dwHoverTime = 500;
+		_TrackMouseEvent(&tme);
+		m_bMouseTracking = TRUE;
+	}
 	Point pt(lParam);
 	Widget* pWid = NULL;
-	switch(uMsg)
+	LRESULT lResult = 0;
+	pWid = GetWidPt(pt);
+	if (pWid == NULL)
 	{
-	case WM_ERASEBKGND:
-		return lResult;
-	case WM_PAINT:
+		pWid = GetObject(m_h2oLastMouseMove);
+		if (pWid != NULL)
 		{
-			// Handle WM_PAINT message
-			Rect rcPaint;
-			if( !::GetUpdateRect(m_hWnd, &rcPaint, FALSE) ) 
-				return 1;
-			PAINTSTRUCT ps;
-			::BeginPaint(m_hWnd, &ps);
-			OnPaint(ps.rcPaint);
-			::EndPaint(m_hWnd, &ps);
+			pWid->SendWidMessage(WM_MOUSELEAVE);
+			ClearH2O(m_h2oLastMouseMove);
 		}
-		break;
-	case WM_MOUSEMOVE:
+	}
+	else
+	{
+		HWID hWidNowMouse = pWid->GetHwid();
+		if (m_h2oLastMouseMove.first != hWidNowMouse)
 		{
-			pWid = GetWidPt(pt);
-			if (pWid == NULL)
+			Widget* pLastMouse = GetObject(m_h2oLastMouseMove);
+			if (pLastMouse != NULL)
 			{
-				pWid = GetObject(m_h2oLastMouseMove);
-				if (pWid != NULL)
-				{
-					pWid->SendWidMessage(WM_MOUSELEAVE);
-					ClearH2O(m_h2oLastMouseMove);
-					return lResult;
-				}
+				pLastMouse->SendWidMessage(WM_MOUSELEAVE);
 			}
-			else
-			{
-				HWID hWidNowMouse = pWid->GetHwid();
-				if (m_h2oLastMouseMove.first != hWidNowMouse)
-				{
-					Widget* pLastMouse = GetObject(m_h2oLastMouseMove);
-					if (pLastMouse != NULL)
-					{
-						pLastMouse->SendWidMessage(WM_MOUSELEAVE);
-					}
-					SetMouseMoveH2O(std::make_pair(hWidNowMouse, pWid));
-				}
-				lResult = pWid->SendWidMessage(WM_MOUSEMOVE, wParam, lParam);
-
-				return lResult;
-			}
+			m_pToolTipWnd->EndToolTip();
+			SetMouseMoveH2O(std::make_pair(hWidNowMouse, pWid));
 		}
-		break;
-	case WM_LBUTTONDOWN:
-		{
-			WFX_CONDITION(m_hWnd != NULL);
-			::SetFocus(m_hWnd);
-			pWid = GetWidPt(pt);
-			if (pWid != NULL)
-			{
-				if (pWid->GetHwid() != m_h2oFocused.first
-					&& pWid != m_h2oFocused.second)
-				{
-					if (m_h2oFocused.second != NULL)
-					{
-						m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, (WPARAM)pWid->GetHwid());
-					}
-					pWid->SendWidMessage(WM_SETFOCUS, (WPARAM)m_h2oFocused.first);
-				}
-				SetCapture(pWid);
-				SetFocus(pWid);
-				SetLButtonDown(pWid);
-				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
-			}
-			else
-			{
-				if (m_h2oFocused.second != NULL)
-				{
-					m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, INVALID_HWID);
-				}
-			}
-		}
-		break;
-	case  WM_LBUTTONUP:
-		{
-			pWid = GetObject(m_h2oCaptured);
-			if (pWid == NULL)
-			{
-				pWid = GetWidPt(pt);
-			}
-			if (m_h2oCaptured.first != INVALID_HWID)
-			{
-				ReleaseCapture();
-				ClearH2O(m_h2oCaptured);
-			}
-			if (pWid != NULL)
-			{
-				lResult = pWid->SendWidMessage(uMsg,  wParam, lParam);
-				Widget* pLastMM = GetObject(m_h2oLastMouseMove);
-				if (pLastMM != NULL)
-				{
-					pLastMM->SendWidMessage(WM_MOUSELEAVE);
-				}
-				ClearH2O(m_h2oLastMouseMove);
-			}
-			pWid = GetWidPt(pt);
-			if (pWid != NULL
-				&& pWid->IsShow()
-				&& m_h2oLButtonDown.first == pWid->GetHwid()
-				&& m_h2oLButtonDown.second == pWid)
-			{
-				pWid->SendWidMessage(WUM_LBUTTONCLICK, wParam, lParam);
-			}
-			ClearH2O(m_h2oLButtonDown);
-		}
-		break;
-	case WM_KEYDOWN:
-	case WM_MOUSEHWHEEL:
-	case WM_MOUSEWHEEL:
-		{
-			pWid = GetObject(m_h2oFocused);
-			if (pWid != NULL)
-			{
-				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
-			}
-		}
-		break;
-	case WM_COMMAND:
-		{
-			if (lParam == 0)
-			{
-				break;
-			}
-			HWND hWndChild = (HWND)lParam;
-			lResult = ::SendMessageW(hWndChild, OCM__BASE + uMsg, wParam, lParam);
-			break;
-		}
-	case WM_TIMER:
-		{
-			UINT_PTR nWidTimer = 0;
-			if (GetWidgetFromTimer(wParam, pWid, nWidTimer))
-			{
-				lResult = pWid->SendWidMessage(WM_TIMER, nWidTimer);
-			}
-			break;
-		}
-	default:
-		lResult = 0;
+		lResult = pWid->SendWidMessage(WM_MOUSEMOVE, wParam, lParam);
 	}
 	return lResult;
 }
 
-Widget* WidDispatch::GetWidPt( POINT pt )
+LRESULT Dispatcher::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	m_bMouseTracking = FALSE;
+	LRESULT lResult = 0;
+	Widget* pWid = GetObject(m_h2oLastMouseMove);
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+	}
+	ClearH2O(m_h2oLastMouseMove);
+	m_pToolTipWnd->EndToolTip();
+	return lResult;
+}
+
+LRESULT Dispatcher::OnMouseHOver( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	m_bMouseTracking = FALSE;
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	pWid = GetWidPt(pt);
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+		m_pToolTipWnd->DoToolTip(GetHwnd(), pWid->GetRect(), pWid->GetToolTip());
+	}
+	return lResult;
+}
+
+LRESULT Dispatcher::OnNotify( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	LRESULT lResult = 0;
+	LPNMHDR lpNMHDR = (LPNMHDR) lParam;
+	if( lpNMHDR != NULL ) lResult = ::SendMessageW(lpNMHDR->hwndFrom, OCM__BASE + uMsg, wParam, lParam);
+	return lResult;
+}
+
+LRESULT Dispatcher::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	WFX_CONDITION(m_hWnd != NULL);
+	::SetFocus(m_hWnd);
+	pWid = GetWidPt(pt);
+	if (pWid != NULL)
+	{
+		if (pWid->GetHwid() != m_h2oFocused.first
+			&& pWid != m_h2oFocused.second)
+		{
+			if (m_h2oFocused.second != NULL)
+			{
+				m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, (WPARAM)pWid->GetHwid());
+			}
+			pWid->SendWidMessage(WM_SETFOCUS, (WPARAM)m_h2oFocused.first);
+		}
+		SetCapture(pWid);
+		SetFocus(pWid);
+		SetLButtonDown(pWid);
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+	}
+	else
+	{
+		if (m_h2oFocused.second != NULL)
+		{
+			m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, INVALID_HWID);
+		}
+	}
+	return lResult;
+}
+
+LRESULT Dispatcher::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	pWid = GetObject(m_h2oCaptured);
+	if (pWid == NULL)
+	{
+		pWid = GetWidPt(pt);
+	}
+	if (m_h2oCaptured.first != INVALID_HWID)
+	{
+		ReleaseCapture();
+		ClearH2O(m_h2oCaptured);
+	}
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg,  wParam, lParam);
+		Widget* pLastMM = GetObject(m_h2oLastMouseMove);
+		if (pLastMM != NULL)
+		{
+			pLastMM->SendWidMessage(WM_MOUSELEAVE);
+		}
+		ClearH2O(m_h2oLastMouseMove);
+	}
+	pWid = GetWidPt(pt);
+	if (pWid != NULL
+		&& pWid->IsShow()
+		&& m_h2oLButtonDown.first == pWid->GetHwid()
+		&& m_h2oLButtonDown.second == pWid)
+	{
+		pWid->SendWidMessage(WUM_LBUTTONCLICK, wParam, lParam);
+	}
+	ClearH2O(m_h2oLButtonDown);
+	return lResult;
+}
+
+LRESULT Dispatcher::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	pWid = GetObject(m_h2oFocused);
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+	}
+	return lResult;
+}
+
+LRESULT Dispatcher::OnMouseHWheel( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	pWid = GetObject(m_h2oFocused);
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+	}
+	return lResult;
+}
+
+LRESULT Dispatcher::OnMouseWheel( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	pWid = GetObject(m_h2oFocused);
+	if (pWid != NULL)
+	{
+		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+	}
+	return lResult;
+}
+
+LRESULT Dispatcher::OnCommand( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	if (lParam == 0)
+	{
+		return lResult;
+	}
+	HWND hWndChild = (HWND)lParam;
+	lResult = ::SendMessageW(hWndChild, OCM__BASE + uMsg, wParam, lParam);
+	return lResult;
+}
+
+LRESULT Dispatcher::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Point pt(lParam);
+	Widget* pWid = NULL;
+	LRESULT lResult = 0;
+	UINT_PTR nWidTimer = 0;
+	if (GetWidgetFromTimer(wParam, pWid, nWidTimer))
+	{
+		lResult = pWid->SendWidMessage(WM_TIMER, nWidTimer);
+	}
+	return lResult;
+}
+
+Widget* Dispatcher::GetWidPt( POINT pt )
 {
 	Widget* pWid = NULL;
 	std::vector<Widget*> rgpWidInPt;
@@ -558,6 +645,10 @@ Widget* WidDispatch::GetWidPt( POINT pt )
 		it != m_Handle2Object.end(); ++it)
 	{
 		WFX_CONDITION(it->second != NULL);
+		if (!it->second->IsShow())
+		{
+			continue;
+		}
 		Rect rcWid = it->second->GetRect();
 		if (rcWid.PtInRect(pt))
 		{
@@ -579,7 +670,7 @@ Widget* WidDispatch::GetWidPt( POINT pt )
 	return pWid;
 }
 
-Widget* WidDispatch::GetWidPt(const std::vector<Widget*>& rgpWid)
+Widget* Dispatcher::GetWidPt(const std::vector<Widget*>& rgpWid)
 {
 	Widget* pWid = NULL;
 	std::vector<Widget*>::const_iterator it = rgpWid.begin();
@@ -604,17 +695,27 @@ Widget* WidDispatch::GetWidPt(const std::vector<Widget*>& rgpWid)
 	return pWid;
 }
 
-HINSTANCE WidDispatch::GetInstance()
+HINSTANCE Dispatcher::GetInstance()
 {
 	return s_hInstance;
 }
 
-void WidDispatch::SetInstance( HINSTANCE hInstance )
+void Dispatcher::SetInstance( HINSTANCE hInstance )
 {
 	s_hInstance = hInstance;
 }
 
-BOOL WidDispatch::SetParent( Widget* pThis, Widget* pParent )
+HWND Dispatcher::GetMainWnd()
+{
+	return s_hMainWnd;
+}
+
+void Dispatcher::SetMainWnd( HWND hMainWnd )
+{
+	s_hMainWnd = hMainWnd;
+}
+
+BOOL Dispatcher::SetParent( Widget* pThis, Widget* pParent )
 {
 	WFX_CONDITION(pThis != NULL);
 	if (pParent == NULL)
@@ -638,7 +739,7 @@ BOOL WidDispatch::SetParent( Widget* pThis, Widget* pParent )
 	return TRUE;
 }
 
-Widget* WidDispatch::FromHwid( HWID hWid ) const
+Widget* Dispatcher::FromHwid( HWID hWid ) const
 {
 	std::map<HWID, Widget*>::const_iterator it = 
 		m_Handle2Object.find(hWid);
@@ -649,13 +750,19 @@ Widget* WidDispatch::FromHwid( HWID hWid ) const
 	return NULL;
 }
 
-Rect WidDispatch::FromRect( const Rect& rc )
+int Dispatcher::MessageLoop()
 {
-	Rect rcc;
-	return rcc;
+	MSG msg = {0};
+	while (GetMessage(&msg, NULL, 0, 0))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return (int) msg.wParam;
 }
 
-void WidDispatch::OnPaint(const Rect& rcPaint)
+void Dispatcher::OnPaint(const Rect& rcPaint)
 {
 	// Note: Only orphans need to handle WM_PAINT message,
 	// parents will handle it for their children.
@@ -667,7 +774,7 @@ void WidDispatch::OnPaint(const Rect& rcPaint)
 	}
 }
 
-void WidDispatch::ShowWid( Widget* pWid, WORD wShow )
+void Dispatcher::ShowWid( Widget* pWid, WORD wShow )
 {
 	WFX_CONDITION(pWid != NULL);
 	pWid->MyShowWid(wShow);
@@ -680,7 +787,7 @@ void WidDispatch::ShowWid( Widget* pWid, WORD wShow )
 	}
 }
 
-void WidDispatch::SetCapture( Widget* pWid )
+void Dispatcher::SetCapture( Widget* pWid )
 {
 	WFX_CONDITION(m_hWnd != NULL);
 	WFX_CONDITION(pWid != NULL);
@@ -689,7 +796,7 @@ void WidDispatch::SetCapture( Widget* pWid )
 	::SetCapture(m_hWnd);
 }
 
-void WidDispatch::SetFocus(Widget* pWid)
+void Dispatcher::SetFocus(Widget* pWid)
 {
 	WFX_CONDITION(m_hWnd != NULL);
 	WFX_CONDITION(pWid != NULL);
@@ -697,26 +804,26 @@ void WidDispatch::SetFocus(Widget* pWid)
 	m_h2oFocused = std::make_pair(pWid->GetHwid(), pWid);
 }
 
-void WidDispatch::SetLButtonDown(Widget* pWid)
+void Dispatcher::SetLButtonDown(Widget* pWid)
 {
 	WFX_CONDITION(m_hWnd != NULL);
 	WFX_CONDITION(pWid != NULL);
 	WFX_CONDITION(*pWid != INVALID_HWID);
 	m_h2oLButtonDown = std::make_pair(pWid->GetHwid(), pWid);
 }
-void WidDispatch::ReleaseCapture()
+void Dispatcher::ReleaseCapture()
 {
 	ClearH2O(m_h2oCaptured);
 	::ReleaseCapture();
 }
 
-void WidDispatch::ClearH2O( std::pair<HWID, Widget*>& h2o )
+void Dispatcher::ClearH2O( std::pair<HWID, Widget*>& h2o )
 {
 	h2o.first = INVALID_HWID;
 	h2o.second = NULL;
 }
 
-Widget* WidDispatch::GetObject( const std::pair<HWID, Widget*>& h2o )
+Widget* Dispatcher::GetObject( const std::pair<HWID, Widget*>& h2o )
 {
 	if (h2o.first != INVALID_HWID)
 	{
@@ -726,19 +833,19 @@ Widget* WidDispatch::GetObject( const std::pair<HWID, Widget*>& h2o )
 	return NULL;
 }
 
-void WidDispatch::SetMouseMoveH2O( const std::pair<HWID, Widget*>& h2o )
+void Dispatcher::SetMouseMoveH2O( const std::pair<HWID, Widget*>& h2o )
 {
 	m_h2oLastMouseMove.first = h2o.first;
 	m_h2oLastMouseMove.second = h2o.second;
 }
 
-void WidDispatch::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
+void Dispatcher::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
 {
 	m_h2oCaptured.first = h2o.first;
 	m_h2oCaptured.second = h2o.second;
 }
 
-void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
+void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
 	WFX_CONDITION(pWid != NULL);
 	Rect rcWid = pWid->GetRect();
@@ -825,22 +932,22 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 	}
 }
 
-void WidDispatch::SetScrollInfo( Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
+void Dispatcher::SetScrollInfo( Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
 {
 
 }
 
-void WidDispatch::GetScrollInfo( Widget* pWid, int nBar, LPSCROLLINFO lpsi )
+void Dispatcher::GetScrollInfo( Widget* pWid, int nBar, LPSCROLLINFO lpsi )
 {
 
 }
 
-void WidDispatch::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam )
+void Dispatcher::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 
 }
 
-void WidDispatch::SetWidRect( Widget* pWid, const Rect& rc )
+void Dispatcher::SetWidRect( Widget* pWid, const Rect& rc )
 {
 	WFX_CONDITION(pWid != NULL);
 
@@ -890,27 +997,27 @@ void WidDispatch::SetWidRect( Widget* pWid, const Rect& rc )
 	pWid->SendWidMessage(WM_SIZE, 0, 0);
 }
 
-UINT_PTR WidDispatch::SetWidTimer( Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc )
+UINT_PTR Dispatcher::SetWidTimer( Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc )
 {
 	return m_pTimer->SetWidTimer(pWid, nWidTimer, uElapse, lpTimerFunc);
 }
 
-BOOL WidDispatch::KillWidTimer( Widget* pWid, UINT_PTR nWidTimer )
+BOOL Dispatcher::KillWidTimer( Widget* pWid, UINT_PTR nWidTimer )
 {
 	return m_pTimer->KillWidTimer(pWid, nWidTimer);
 }
 
-BOOL WidDispatch::GetWidgetFromTimer( UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer )
+BOOL Dispatcher::GetWidgetFromTimer( UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer )
 {
 	return m_pTimer->GetWidgetFromTimer(nWndTimer, pWid, nWidTimer);
 }
 
-void WidDispatch::Invalidate( const Rect& rc )
+void Dispatcher::Invalidate( const Rect& rc )
 {
 	::InvalidateRect(m_hWnd, &rc, FALSE);
 }
 
-void WidDispatch::DrawBkgnd( Widget* pWid, HDC hdc, const Rect& rc )
+void Dispatcher::DrawBkgnd( Widget* pWid, HDC hdc, const Rect& rc )
 {
 	//WFX_CONDITION(pWid != NULL);
 	//Widget* pParent = pWid->GetParent();

@@ -17,7 +17,7 @@ BEGIN_NAMESPACE_WFX
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 
 // forward declare
-class WidDispatch;
+class Dispatcher;
 class Timer;
 
 class Widget;
@@ -76,8 +76,11 @@ public:
 	virtual Rect GetRect() const;
 	virtual Widget* GetParent() const;
 	virtual void SetParent(Widget* pParent);
+	virtual String GetToolTip() const;
+	virtual void SetToolTip(const String& strToolTip);
 protected:
 	String m_strText;
+	String m_strToolTip;
 	DWORD m_dwFormat;
 	COLORREF m_clrText;
 	COLORREF m_clrBkgnd;
@@ -87,13 +90,14 @@ protected:
 	Rect m_rect;
 	Widget* m_pParent;
 };
+
 typedef SharedPtr<AttrBase> PBasicAttr;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Widget: the root class of ui classes
 class WFX_API Widget :
 	public MsgMap, public AttrBase
 {
-	friend class WidDispatch;
+	friend class Dispatcher;
 	friend class Timer;
 	friend class TimerTranslator;
 public:
@@ -124,7 +128,7 @@ public:
 	WFX_END_MSG_MAP()
 
 public:
-	BOOL Create(const Rect& rc, WidDispatch* pDispatch,
+	BOOL Create(const Rect& rc, Dispatcher* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
 
 	// Position
@@ -144,7 +148,7 @@ protected:
 	void SetDrawRect(const Rect& rc);
 public:
 	virtual void SetParent(Widget* pParent);
-	// For WidDispatch
+	// For Dispatcher
 protected:
 	void SetMyParent(Widget* pParent);
 	ULONG GetChildren(std::vector<Widget*>& rgpChildren) const;
@@ -224,7 +228,7 @@ protected:
 	// Identifier
 public:
 	HWID m_hWid;
-	WidDispatch* m_pDispatch;
+	Dispatcher* m_pDispatch;
 private:
 	// Position
 	Rect m_rcDraw;
@@ -363,10 +367,10 @@ public:
 protected:
 	PImage GetImageFromState();
 protected:
-	PImage m_pStatic;
-	PImage m_pMouse;
-	PImage m_pPush;
-	PImage m_pChecked;
+	PImage m_pImgStatic;
+	PImage m_pImgMouse;
+	PImage m_pImgPush;
+	PImage m_pImgChecked;
 };
 typedef SharedPtr<ImageWid> PImageWid;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -545,14 +549,14 @@ protected:
 };
 typedef SharedPtr<ComboBox> PComboBox;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-typedef SharedPtr<WidDispatch> PWidDispatch;
+typedef SharedPtr<Dispatcher> PDispatcher;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Window: Window for controls
 class WFX_API Window : public MsgMap
 {
 public:
 	// !!! m_pDispatch must be the first member
-	PWidDispatch m_pDispatch;
+	PDispatcher m_pDispatch;
 public:
 	Window();
 	virtual ~Window();
@@ -563,13 +567,13 @@ public:
 	BOOL RegisterWindowClass();
 	BOOL RegisterSuperClass();
 
-	HWND Create(HWND hwndParent, LPCTSTR pszName,
+	HWND Create(HWND hwndParent, LPCWSTR pszName,
 		DWORD dwStyle, DWORD dwExStyle, const Rect& rc,
 		HMENU hMenu = NULL);
 
 	HWND SubClass(HWND hWnd);
 	void UnSubClass();
-	void ShoWidWnd(BOOL bShow = TRUE, BOOL bTakeFocus = TRUE);
+	void ShowWindow(BOOL bShow = TRUE, BOOL bTakeFocus = TRUE);
 	BOOL ShowModal();
 	void Close();
 	void CenterWindow();
@@ -582,8 +586,8 @@ public:
 		UINT uElapse,
 		TIMERPROC lpTimerFunc) const;
 protected:
-	virtual LPCTSTR GetWindowClassName() const = 0;
-	virtual LPCTSTR GetSuperClassName() const;
+	virtual LPCWSTR GetWindowClassName() const;
+	virtual LPCWSTR GetSuperClassName() const;
 	virtual UINT GetClassStyle() const;
 
 	LRESULT SendMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -592,8 +596,8 @@ protected:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 	void ResizeClient(int cx = -1, int cy = -1);
+	virtual void OnInitialMessage(HWND hWnd);
 	virtual void OnFinalMessage(HWND hWnd);
-
 	static LRESULT CALLBACK __WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK __ControlProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -602,9 +606,26 @@ protected:
 	WNDPROC m_OldWndProc;
 	BOOL m_bSubclassed;
 };
+
 typedef SharedPtr<Window> PWindow;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API InPlaceWnd : public Window
+class WFX_API WidgetWnd : public Window
+{
+public:
+	// !!! m_pDispatch must be the first member
+	PDispatcher m_pDispatch;
+public:
+	WidgetWnd();
+public:
+	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT& lResult, DWORD dwMsgMapID);
+protected:
+	virtual void OnInitialMessage(HWND hWnd);
+};
+
+typedef SharedPtr<WidgetWnd> PWidgetWnd;
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+class WFX_API InPlaceWnd : public WidgetWnd
 {
 public:
 	InPlaceWnd();
@@ -636,8 +657,8 @@ public:
 public:
 	virtual void OnInPlaceWindowKillFocus();
 	virtual HWND CreateInPlaceWindow();
-	virtual LPCTSTR GetSuperClassName() const;
-	virtual LPCTSTR GetWindowClassName() const;
+	virtual LPCWSTR GetSuperClassName() const;
+	virtual LPCWSTR GetWindowClassName() const;
 public:
 	wfx_msg LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -659,7 +680,7 @@ public:
 public:
 	virtual void OnInPlaceWindowKillFocus();
 	virtual HWND CreateInPlaceWindow();
-	virtual LPCTSTR GetWindowClassName() const;
+	virtual LPCWSTR GetWindowClassName() const;
 public:
 	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -673,8 +694,15 @@ typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ToolTipWnd : public Window
 {
-
+public:
+	ToolTipWnd();
+public:
+	void DoToolTip(HWND hParent, const Rect& rc, const String& strToolTip);
+	void EndToolTip();
+protected:
+	PToolInfo m_pToolInfo;
 };
+
 typedef SharedPtr<ToolTipWnd> PToolTipWnd;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Menu : public InPlaceWnd
@@ -714,12 +742,6 @@ struct TimerValue
 
 typedef std::map<UINT_PTR, UINT_PTR> Timer2Timer;
 
-struct TimerPair
-{
-	Timer2Timer m_WidTimer2WndTimer;
-	Timer2Timer m_WndTimer2WidTimer;
-};
-
 class TimerTranslator
 {
 public:
@@ -743,28 +765,28 @@ typedef SharedPtr<TimerTranslator> PTimerTranslator;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class Timer
 {
-	friend class WidDispatch;
+	friend class Dispatcher;
 public:
-	Timer(WidDispatch* pDispatch);
+	Timer(Dispatcher* pDispatch);
 public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(Widget* pWid, UINT_PTR nWidTimer);
 	BOOL GetWidgetFromTimer(UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer);
 	void Destroy(Widget* pWid);
 protected:
-	WidDispatch* m_pDispatch;
+	Dispatcher* m_pDispatch;
 	PTimerTranslator m_pTimerTranslator;
 };
 typedef SharedPtr<Timer> PTimer;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-// WidDispatch: dispatch messages for widget
-class WFX_API WidDispatch : public MsgMap
+// Dispatcher: dispatch messages for widget
+class WFX_API Dispatcher : public MsgMap
 {
 	friend class Widget;
 	friend class Timer;
 public:
-	WidDispatch(HWND hWnd = NULL);
-	virtual ~WidDispatch();
+	Dispatcher(HWND hWnd = NULL);
+	virtual ~Dispatcher();
 public:
 	void SetHwnd(HWND hWnd);
 	HWND GetHwnd() const;
@@ -789,8 +811,49 @@ protected:
 	void ShowWid(Widget* pWid, WORD wShow);
 public:
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		LRESULT& lResult, DWORD dwMsgMapID);
+public:
+	WFX_BEGIN_MSG_MAP(Dispatcher)
+		WFX_MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+		WFX_MESSAGE_HANDLER(WM_PAINT, OnPaint)
+		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
+		//WFX_MESSAGE_HANDLER(WM_MOUSEHWHEEL, OnMouseHWheel)
+		WFX_MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
+		WFX_MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+		WFX_MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHOver)
+		WFX_MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseHWheel(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseHOver(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
 public:
 	Widget* GetWidPt(POINT pt);
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
@@ -810,7 +873,9 @@ public:
 public:
 	static HINSTANCE GetInstance();
 	static void SetInstance(HINSTANCE hInstance);
-	static Rect FromRect(const Rect& rc);
+	static HWND GetMainWnd();
+	static void SetMainWnd(HWND hMainWnd);
+	static int MessageLoop();
 protected:
 	HWND m_hWnd;
 	std::vector<HWID> m_rghWid;
@@ -821,13 +886,18 @@ protected:
 	std::pair<HWID, Widget*> m_h2oFocused;
 	std::pair<HWID, Widget*> m_h2oLButtonDown;
 	PTimer m_pTimer;
+	BOOL m_bMouseTracking;
+	PToolTipWnd m_pToolTipWnd;
 public:
 	static HWID s_hWidBase;
 private:
 	static HINSTANCE s_hInstance;
-	static std::vector<WidDispatch*> s_rgpDispatch;
+	static HWND s_hMainWnd;
+	static std::vector<Dispatcher*> s_rgpDispatch;
 };
 
-typedef SharedPtr<WidDispatch> PWidDispatch;
+typedef SharedPtr<Dispatcher> PDispatcher;
+
+typedef Dispatcher WfxDispatcher;
 
 END_NAMESPACE_WFX

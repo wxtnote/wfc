@@ -43,7 +43,7 @@ HWND ComboWnd::CreateInPlaceWindow()
 	return m_hWnd;
 }
 
-LPCTSTR ComboWnd::GetWindowClassName() const
+LPCWSTR ComboWnd::GetWindowClassName() const
 {
 	return L"ComboWnd";
 }

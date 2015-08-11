@@ -17,7 +17,7 @@ BEGIN_NAMESPACE_WFX
 
 class MsgMap;
 class Widget;
-class WidDispatch;
+class Dispatcher;
 class Grid;
 class Layout;
 
@@ -78,7 +78,7 @@ protected:
 
 typedef SharedPtr<Grid> PGrid;
 
-class WFX_API LayoutDispatch : public WidDispatch
+class WFX_API LayoutDispatch : public Dispatcher
 {
 public:
 	LayoutDispatch();
@@ -89,7 +89,7 @@ public:
 	WFX_BEGIN_MSG_MAP(LayoutDispatch)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_CHAIN_MSG_MAP(WidDispatch)
+		WFX_CHAIN_MSG_MAP(Dispatcher)
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,

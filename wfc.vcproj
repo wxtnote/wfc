@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="./wfc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;WFX_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -116,6 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="./Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WFX_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -300,43 +302,43 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfx.h"
+				RelativePath=".\wfc\wfx.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxcmn.h"
+				RelativePath=".\wfc\wfxcmn.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxcmnwnd.h"
+				RelativePath=".\wfc\wfxcmnwnd.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxfrmwk.h"
+				RelativePath=".\wfc\wfxfrmwk.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxlayout.h"
+				RelativePath=".\wfc\wfxlayout.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxlib.h"
+				RelativePath=".\wfc\wfxlib.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxpane.h"
+				RelativePath=".\wfc\wfxpane.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxrender.h"
+				RelativePath=".\wfc\wfxrender.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxtabctrl.h"
+				RelativePath=".\wfc\wfxtabctrl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxwid.h"
+				RelativePath=".\wfc\wfxwid.h"
 				>
 			</File>
 		</Filter>

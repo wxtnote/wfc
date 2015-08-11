@@ -58,7 +58,7 @@ WfxRender::MemDC::operator HDC()
 	return m_hdcMem;
 }
 
-void WfxRender::DrawButtton( HDC hdc, const String& strText, const Rect& rc, WORD wState, WidDispatch* pDispatch )
+void WfxRender::DrawButtton( HDC hdc, const String& strText, const Rect& rc, WORD wState, Dispatcher* pDispatch )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -92,33 +92,33 @@ void WfxRender::DrawButtton( HDC hdc, const String& strText, const Rect& rc, WOR
 }
 
 
-void WfxRender::DrawRadioBox( HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawRadioBox( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
 {
 
 }
 
-void WfxRender::DrawWidget( HDC hdc, const String& strText, const Rect& rc, WORD wState , WidDispatch* pDispatch)
+void WfxRender::DrawWidget( HDC hdc, const String& strText, const Rect& rc, WORD wState , Dispatcher* pDispatch)
 {
 	DrawSolidRect(hdc, rc, WID_BKGND_STATIC, pDispatch);
 	DrawText(hdc, rc, strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_CENTER, NULL, pDispatch);
 	DrawFrame(hdc, rc, WID_FRAME_STATIC, pDispatch);
 }
 
-void WfxRender::DrawSolidRect( HDC hdc, const Rect& rcPaint, COLORREF clr ,WidDispatch* pDispatch)
+void WfxRender::DrawSolidRect( HDC hdc, const Rect& rcPaint, COLORREF clr ,Dispatcher* pDispatch)
 {
 	WFX_CONDITION(::GetObjectType(hdc)==OBJ_DC || ::GetObjectType(hdc)==OBJ_MEMDC);
 	::SetBkColor(hdc, clr);
 	::ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rcPaint, NULL, 0, NULL);
 }
 
-void WfxRender::DrawFrame( HDC hdc, const Rect& rcPaint, COLORREF clr, WidDispatch* pDispatch )
+void WfxRender::DrawFrame( HDC hdc, const Rect& rcPaint, COLORREF clr, Dispatcher* pDispatch )
 {
 	HBRUSH brsh = ::CreateSolidBrush(clr);
 	::FrameRect(hdc, &rcPaint, brsh);
 	::DeleteObject(brsh);
 }
 
-void WfxRender::DrawText( HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont /*= NULL*/, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawText( HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont /*= NULL*/, Dispatcher* pDispatch /*= NULL*/ )
 {
 	WFX_CONDITION(::GetObjectType(hdc)==OBJ_DC || ::GetObjectType(hdc)==OBJ_MEMDC);
 	::SetBkMode(hdc, TRANSPARENT);
@@ -133,12 +133,12 @@ void WfxRender::DrawText( HDC hdc, const Rect& rcPaint, const String& strText, C
 	::SelectObject(hdc, hOldFont);
 }
 
-void WfxRender::DrawSlider( HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawSlider( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
 {
 	DrawSolidRect(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
 }
 
-void WfxRender::DrawArror( HDC hdc, const Rect& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawArror( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
 {
 
 }
@@ -188,7 +188,7 @@ void WfxRender::DrawHeadCell( HDC hdc, const Rect& rcPaint, DWORD dwState, const
 	}
 }
 
-Size WfxRender::EstimateWidgetSize( const Rect& rc, const String& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+Size WfxRender::EstimateWidgetSize( const Rect& rc, const String& strText, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
 {
 	Size sz;
 	sz.cx = rc.right - rc.left;
@@ -248,18 +248,19 @@ void WfxRender::DrawLayerCell( HDC hdc, const Rect& rcPaint, DWORD dwState, cons
 
 HFONT WfxRender::GetFontObject()
 {
-	if (s_hFont != NULL)
+	if (s_hFont == NULL)
 	{
-		LOGFONTW lf;
-		wsprintfW(lf.lfFaceName, L"%s", L"System");
-		lf.lfWidth = 400;
-		lf.lfHeight = 30;
+		LOGFONTW lf = {0};
+		wsprintfW(lf.lfFaceName, L"%s", WID_FONT_STATIC);
+		lf.lfWeight = FW_NORMAL;
+		lf.lfHeight = 12;
+		lf.lfCharSet = DEFAULT_CHARSET;
 		s_hFont = ::CreateFontIndirectW(&lf);
 	}
 	return s_hFont;
 }
 
-void WfxRender::DrawTextBox( HDC hdc, const String& strText, const Rect& rc, WORD wState, WORD wMode, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawTextBox( HDC hdc, const String& strText, const Rect& rc, WORD wState, WORD wMode, Dispatcher* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WTXB_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -294,7 +295,7 @@ void WfxRender::DrawTextBox( HDC hdc, const String& strText, const Rect& rc, WOR
 	DrawText(hdc, rcText, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
 }
 
-void WfxRender::DrawCheckBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawCheckBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, Dispatcher* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -343,7 +344,7 @@ void WfxRender::DrawCheckBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bCh
 	DrawFrame(hdc, rc, clrFrm, pDispatch);
 }
 
-void WfxRender::DrawCheckBox( HDC hdc, const String& strText, const Rect& rc, WORD wState, ULONG nTextOffset, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawCheckBox( HDC hdc, const String& strText, const Rect& rc, WORD wState, ULONG nTextOffset, Dispatcher* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -378,7 +379,7 @@ void WfxRender::DrawCheckBox( HDC hdc, const String& strText, const Rect& rc, WO
 	DrawText(hdc, rcText, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
 }
 
-void WfxRender::DrawRadioBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawRadioBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bChecked, Dispatcher* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -415,7 +416,7 @@ void WfxRender::DrawRadioBoxItem( HDC hdc, const Rect& rc, WORD wState, BOOL bCh
 	DrawFrame(hdc, rc, clrFrm, pDispatch);
 }
 
-void WfxRender::DrawProcessBar( HDC hdc, const Rect& rc, WORD wState, ULONG nMax, ULONG nPos, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawProcessBar( HDC hdc, const Rect& rc, WORD wState, ULONG nMax, ULONG nPos, Dispatcher* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -504,10 +505,7 @@ void WfxRender::DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD d
 	gs.DrawImage(pImage.get(), rcF);
 }
 
-
-
 HFONT WfxRender::s_hFont = NULL;
-
 
 WfxRender::RenderClip::~RenderClip()
 {

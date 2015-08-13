@@ -139,6 +139,7 @@ public:
 	Rect GetParentRect() const;
 	void ShowWid(WORD wShow);
 	BOOL IsShow() const;
+	BOOL IsCaptured() const;
 	void SetCapture();
 	void ReleaseCapture();
 
@@ -182,6 +183,7 @@ public:
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	UINT_PTR SetWidTimer(UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc = NULL);
 	BOOL KillWidTimer(UINT_PTR uIDEvent);
+
 public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -251,6 +253,7 @@ private:
 	// Event ID
 	UINT m_nID;
 };
+
 typedef SharedPtr<Widget> PWidget;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API UnitBase : public MsgMap, public AttrBase
@@ -302,9 +305,11 @@ public:
 	virtual ~ScrollBar();
 public:
 	WFX_BEGIN_MSG_MAP(ScrollBar)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_MESSAGE_HANDLER(WUM_SB_OFFSET, OnSliderOffset)
+		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
@@ -312,42 +317,40 @@ public:
 	void SetBar(int nBar);
 	void GetScrollInfo(SCROLLINFO* pScrollInfo) const;
 	void SetScrollInfo(const SCROLLINFO* pScrollInfo);
-	void SetRange(int nMax, int nMin);
+	void SetRange(int nMin, int nMax);
 	void SetPos(int nPos);
 	int GetPos() const;
-	//int GetMax() const;
-	//int GetMin() const;
-
-protected:
-	int CalcSliderPos(const Rect& rcSlider);
-	Rect CalcSliderRect(const Rect& rcMaxSlider);
-	int GetSliderMax();
-	int GetSliderMin();
-	int GetSlierMid();
-	float CalcSliderSize();
-
 public:
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnSliderOffset(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+protected:
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
+protected:
+	void SetHorzThumbPos(LONG nThumbSize, LONG x);
+	void SetVertThumbPos(LONG nThumbSize, LONG y);
 protected:
 	int m_nBar;
-	BOOL m_bLButtonDown;
-	BOOL m_bInSlider;
-	Point m_ptLButtonDown;
-	LONG m_nSliderSize;
 	LONG m_nArrorSize;
-	LONG m_nSAMargin;
+	Rect m_rcThumb;
+	Rect m_rcThumbHolder;
+	Rect m_rcArrow1;
+	Rect m_rcArrow2;
+	Point m_ptLButtonDown;
+	Point m_ptMouseMove;
+	BOOL m_bInThumb;
+	BOOL m_bDirection;
 protected:
 	PSCROLLINFO m_pScrollInfo;
-	PWidget m_pArrow1;
-	PWidget m_pArrow2;
-	PWidget m_pSlider;
 };
+
 typedef SharedPtr<ScrollBar> PScrollBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ImageWid : public Widget
@@ -819,7 +822,6 @@ public:
 		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
 		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-		//WFX_MESSAGE_HANDLER(WM_MOUSEHWHEEL, OnMouseHWheel)
 		WFX_MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
 		WFX_MESSAGE_HANDLER(WM_COMMAND, OnCommand)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
@@ -840,8 +842,6 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnMouseHWheel(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
 	wfx_msg LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -859,6 +859,7 @@ public:
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
 	Widget* FromHwid(HWID hWid) const;
 	void SetCapture(Widget* pWid);
+	BOOL IsCaptured(const Widget* pWid) const;
 	void SetFocus(Widget* pWid);
 	void SetLButtonDown(Widget* pWid);
 	void ReleaseCapture();
@@ -870,12 +871,6 @@ public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nWidTimer, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(Widget* pWid, UINT_PTR nWidTimer);
 	BOOL GetWidgetFromTimer(UINT_PTR nWndTimer, Widget*& pWid, UINT_PTR& nWidTimer);
-public:
-	static HINSTANCE GetInstance();
-	static void SetInstance(HINSTANCE hInstance);
-	static HWND GetMainWnd();
-	static void SetMainWnd(HWND hMainWnd);
-	static int MessageLoop();
 protected:
 	HWND m_hWnd;
 	std::vector<HWID> m_rghWid;
@@ -890,10 +885,25 @@ protected:
 	PToolTipWnd m_pToolTipWnd;
 public:
 	static HWID s_hWidBase;
+public:
+	static HINSTANCE GetInstance();
+	static void SetInstance(HINSTANCE hInstance);
+	static HWND GetMainWnd();
+	static void SetMainWnd(HWND hMainWnd);
+	static int MessageLoop();
+	static void GetHSL(short& nH, short& nS, short& nL);
+	static void SetHSL(short nH, short nS, short nL);
+	static int GetAlpha();
+	static void SetAlpha(int nAlpha);
+	static void SetAlpha(int nAlpha, HWND hWnd);
 private:
 	static HINSTANCE s_hInstance;
 	static HWND s_hMainWnd;
 	static std::vector<Dispatcher*> s_rgpDispatch;
+	static short s_nH;
+	static short s_nS;
+	static short s_nL;
+	static int   s_nAlpha;
 };
 
 typedef SharedPtr<Dispatcher> PDispatcher;

@@ -20,10 +20,9 @@ CommonWid::CommonWid()
 : m_pBtnMax(new Button)
 , m_pBtnMin(new Button)
 , m_pBtnClose(new Button)
-, m_pImage(WFX_GET_IMAGE(L"E:\\prj\\wfxdev\\bind\\pop_logo.png"))
+, m_pImage(WFX_GET_IMAGE(L"E:\\prj\\wfxdev\\bind\\pop_logo.ico"))
 {
-	m_pImage.reset(WFX_GET_IMAGE(L"E:\\prj\\wfxdev\\bind\\pop_logo.png"));
-	m_pBtnMax->SetText(L"¿Ú");
+	m_pBtnMax->SetText(L"¿Ú"); 
 	m_pBtnMin->SetText(L"¡ª");
 	m_pBtnClose->SetText(L"X");
 	m_pBtnMax->SetID(WID_BTNID_MAX);
@@ -119,9 +118,9 @@ BOOL CommonWnd::Initialize()
 LRESULT CommonWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	WFX_CONDITION(m_pRoot != NULL);
-	LONG styleValue = ::GetWindowLong(*this, GWL_STYLE);
+	LONG styleValue = ::GetWindowLongW(*this, GWL_STYLE);
 	styleValue &= ~WS_CAPTION;
-	::SetWindowLong(*this, GWL_STYLE, styleValue | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	::SetWindowLongW(*this, GWL_STYLE, styleValue | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	Rect rc;
 	m_pRoot->Create(rc, m_pDispatch.get());
 	SendWidMessage(WUM_WIDROOT_CREATE);

@@ -306,6 +306,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfx\wfxbar.h"
+				>
+			</File>
+			<File
 				RelativePath=".\wfc\wfxcmn.h"
 				>
 			</File>

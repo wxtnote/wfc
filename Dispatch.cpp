@@ -247,6 +247,11 @@ std::vector<Dispatcher*> Dispatcher::s_rgpDispatch;
 
 HINSTANCE Dispatcher::s_hInstance = NULL;
 HWND Dispatcher::s_hMainWnd = NULL;
+int Dispatcher::s_nAlpha = 255;
+short Dispatcher::s_nL = 180;
+short Dispatcher::s_nS = 100;
+short Dispatcher::s_nH = 100;
+
 Dispatcher::Dispatcher( HWND hWnd /*= NULL*/ )
 : m_hWnd(hWnd)
 , m_pToolTipWnd(new ToolTipWnd)
@@ -584,19 +589,6 @@ LRESULT Dispatcher::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	return lResult;
 }
 
-LRESULT Dispatcher::OnMouseHWheel( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	Point pt(lParam);
-	Widget* pWid = NULL;
-	LRESULT lResult = 0;
-	pWid = GetObject(m_h2oFocused);
-	if (pWid != NULL)
-	{
-		lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
-	}
-	return lResult;
-}
-
 LRESULT Dispatcher::OnMouseWheel( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Point pt(lParam);
@@ -762,6 +754,71 @@ int Dispatcher::MessageLoop()
 	return (int) msg.wParam;
 }
 
+void Dispatcher::GetHSL( short& nH, short& nS, short& nL )
+{
+	nH = s_nH;
+	nS = s_nS;
+	nL = s_nL;
+}
+
+void Dispatcher::SetHSL( short nH, short nS, short nL )
+{
+	s_nH = nH;
+	s_nS = nS;
+	s_nL = nL;
+}
+
+int Dispatcher::GetAlpha()
+{
+	return s_nAlpha;
+}
+
+void Dispatcher::SetAlpha( int nAlpha )
+{
+	if (nAlpha < 0)
+	{
+		nAlpha = 0;
+	}
+	if (nAlpha > 255)
+	{
+		nAlpha = 255;
+	}
+	s_nAlpha = nAlpha;
+	HWND hWnd = NULL;
+	for (std::vector<Dispatcher*>::iterator it = s_rgpDispatch.begin();
+		it != s_rgpDispatch.end(); ++it)
+	{
+		WFX_CONDITION((*it) != NULL);
+		hWnd = (*it)->GetHwnd();
+		SetAlpha(s_nAlpha, hWnd);
+	}
+}
+
+void Dispatcher::SetAlpha( int nAlpha, HWND hWnd )
+{
+	if (!::IsWindow(hWnd))
+	{
+		return;
+	}
+	typedef BOOL (__stdcall *PFUNCSETLAYEREDWINDOWATTR)(HWND, COLORREF, BYTE, DWORD);
+	PFUNCSETLAYEREDWINDOWATTR fSetLayeredWindowAttributes;
+
+	HMODULE hUser32 = ::GetModuleHandleW(L"User32.dll");
+	if (hUser32)
+	{
+		fSetLayeredWindowAttributes = 
+			(PFUNCSETLAYEREDWINDOWATTR)::GetProcAddress(hUser32, "SetLayeredWindowAttributes");
+		if( fSetLayeredWindowAttributes == NULL ) return;
+	}
+
+	DWORD dwStyle = ::GetWindowLongW(hWnd, GWL_EXSTYLE);
+	DWORD dwNewStyle = dwStyle;
+	if( nAlpha >= 0 && nAlpha < 256 ) dwNewStyle |= WS_EX_LAYERED;
+	else dwNewStyle &= ~WS_EX_LAYERED;
+	if(dwStyle != dwNewStyle) ::SetWindowLongW(hWnd, GWL_EXSTYLE, dwNewStyle);
+	fSetLayeredWindowAttributes(hWnd, 0, nAlpha, LWA_ALPHA);
+}
+
 void Dispatcher::OnPaint(const Rect& rcPaint)
 {
 	// Note: Only orphans need to handle WM_PAINT message,
@@ -794,6 +851,12 @@ void Dispatcher::SetCapture( Widget* pWid )
 	WFX_CONDITION(*pWid != INVALID_HWID);
 	m_h2oCaptured = std::make_pair(pWid->GetHwid(), pWid);
 	::SetCapture(m_hWnd);
+}
+
+BOOL Dispatcher::IsCaptured( const Widget* pWid ) const
+{
+	WFX_CONDITION(pWid != NULL);
+	return (pWid == m_h2oCaptured.second) && (pWid->GetHwid() == m_h2oCaptured.first);
 }
 
 void Dispatcher::SetFocus(Widget* pWid)

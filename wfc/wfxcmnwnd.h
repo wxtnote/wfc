@@ -55,6 +55,7 @@ protected:
 	PImage m_pImage;
 	Rect m_rcCaption;
 	Rect m_rcClient;
+	Rect m_rcStatusBar;
 };
 
 typedef CommonWid RootWid;

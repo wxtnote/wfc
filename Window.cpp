@@ -15,7 +15,7 @@ USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Window::Window()
 : m_hWnd(NULL)
-, m_OldWndProc(::DefWindowProc)
+, m_OldWndProc(::DefWindowProcW)
 , m_bSubclassed(FALSE)
 {
 
@@ -42,7 +42,7 @@ BOOL Window::RegisterWindowClass()
 	wc.style = GetClassStyle();
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hIcon = ::LoadIconW(Dispatcher::GetInstance(), L"pop_logo.png");
+	wc.hIcon = NULL;
 	wc.lpfnWndProc = Window::__WndProc;
 	wc.hInstance = Dispatcher::GetInstance();
 	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
@@ -247,13 +247,13 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		pThis = static_cast<Window*>(lpcs->lpCreateParams);
 		pThis->m_hWnd = hWnd;
 		pThis->OnInitialMessage(hWnd);
-		::SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(pThis));
+		::SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(pThis));
 	} 
 	else {
-		pThis = reinterpret_cast<Window*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		pThis = reinterpret_cast<Window*>(::GetWindowLongPtrW(hWnd, GWLP_USERDATA));
 		if( uMsg == WM_NCDESTROY && pThis != NULL ) {
-			LRESULT lRes = ::CallWindowProc(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
-			::SetWindowLongPtr(pThis->m_hWnd, GWLP_USERDATA, 0L);
+			LRESULT lRes = ::CallWindowProcW(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
+			::SetWindowLongPtrW(pThis->m_hWnd, GWLP_USERDATA, 0L);
 			if( pThis->m_bSubclassed ) pThis->UnSubClass();
 			pThis->OnFinalMessage(hWnd);
 			pThis->m_hWnd = NULL;

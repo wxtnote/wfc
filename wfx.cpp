@@ -257,3 +257,9 @@ Point::operator LPPOINT()
 {
 	return (tagPOINT*)this;
 }
+
+void Point::operator=( LPARAM lParam )
+{
+	x = GET_X_LPARAM(lParam);
+	y = GET_Y_LPARAM(lParam);
+}

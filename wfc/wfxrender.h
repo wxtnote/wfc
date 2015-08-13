@@ -63,8 +63,8 @@ public:
 	static void DrawSolidRect(HDC hdc, const Rect& rcPaint, COLORREF clr, Dispatcher* pDispatch = NULL);
 	static void DrawFrame(HDC hdc, const Rect& rcPaint, COLORREF clr, Dispatcher* pDispatch = NULL);
 	static void DrawText(HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, Dispatcher* pDispatch = NULL);
-	static void DrawSlider(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
-	static void DrawArror(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawThumb(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
+	static void DrawArror(HDC hdc, const Rect& rc, WORD wState, UINT nDirection, Dispatcher* pDispatch = NULL);
 	static void GenerateClip(HDC hdc, const Rect& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const Rect& rcPaint,  DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);

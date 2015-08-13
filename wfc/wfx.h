@@ -143,6 +143,7 @@ public:
 	Point(const POINT& src);
 	Point(LONG x, LONG y);
 	Point(LPARAM lParam);
+	void operator=(LPARAM lParam);
 	void Empty();
 	operator LPPOINT();
 };

@@ -133,14 +133,14 @@ void WfxRender::DrawText( HDC hdc, const Rect& rcPaint, const String& strText, C
 	::SelectObject(hdc, hOldFont);
 }
 
-void WfxRender::DrawSlider( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
+void WfxRender::DrawThumb( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
 {
 	DrawSolidRect(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
 }
 
-void WfxRender::DrawArror( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
+void WfxRender::DrawArror( HDC hdc, const Rect& rc, WORD wState, UINT nDirection, Dispatcher* pDispatch /*= NULL*/ )
 {
-
+	DrawSolidRect(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
 }
 
 void WfxRender::GenerateClip( HDC hDC, const Rect& rcItem, RenderClip& clip )
@@ -499,8 +499,8 @@ void WfxRender::DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD d
 	default:
 		;
 	}
-	rcF.Width = nImgWidth;
-	rcF.Height = nImgHeight;
+	rcF.Width = rc.GetWidth();
+	rcF.Height = rc.GetHeight();
 	Gdiplus::Graphics gs(hdc);
 	gs.DrawImage(pImage.get(), rcF);
 }

@@ -15,30 +15,80 @@
 
 USING_NAMESPACE_WFX;
 
-ProcessBar::ProcessBar()
-: m_nMax(0)
+ProcessBar::ProcessBar(int nBar /*= SB_HORZ*/)
+: m_nBar(nBar)
+, m_nMin(0)
+, m_nMax(0)
 , m_nPos(0)
 {
 
 }
 
-void ProcessBar::SetRange( ULONG nMax )
+int ProcessBar::GetBar() const
 {
+	return m_nBar;
+}
+
+void ProcessBar::SetBar( int nBar )
+{
+	m_nBar = nBar;
+}
+
+void ProcessBar::SetRange( LONG nMin, LONG nMax )
+{
+	m_nMin = nMin;
 	m_nMax = nMax;
 }
 
-void ProcessBar::SetPos( ULONG nPos, BOOL bDraw /*= TRUE*/ )
+LONG ProcessBar::GetRange() const
 {
+	return m_nMax - m_nMin;
+}
+
+LONG ProcessBar::GetMax() const
+{
+	return m_nMax;
+}
+
+LONG ProcessBar::GetMin() const
+{
+	return m_nMin;
+}
+
+void ProcessBar::SetPos( LONG nPos )
+{
+	if (nPos > m_nMax)
+	{
+		nPos = m_nMax;
+	}
+	if (nPos < m_nMin)
+	{
+		nPos = m_nMin;
+	}
+	if (m_nPos == nPos)
+	{
+		return;
+	}
 	m_nPos = nPos;
-	if (bDraw)
+	if (IsWidget())
 	{
 		InvalidWid();
 	}
 }
 
-ULONG ProcessBar::GetPos() const
+LONG ProcessBar::GetPos() const
 {
 	return m_nPos;
+}
+
+BOOL ProcessBar::IsCompleted() const
+{
+	return m_nPos == m_nMax;
+}
+
+void ProcessBar::Reset()
+{
+	m_nPos = m_nMin;
 }
 
 void ProcessBar::OnDraw( HDC hdc, const Rect& rc )

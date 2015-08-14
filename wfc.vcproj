@@ -236,6 +236,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ScrollBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Slider.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration

@@ -142,7 +142,7 @@ public:
 	BOOL IsCaptured() const;
 	void SetCapture();
 	void ReleaseCapture();
-
+	BOOL IsWidget() const;
 protected:
 	void MyShowWid(WORD wShow);
 	Rect GetDrawRect() const;
@@ -266,18 +266,48 @@ public:
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-// Slider: for ScrollBar
-class WFX_API Slider : public Widget
+class WFX_API ProcessBar : public Widget
 {
 public:
-	Slider(int nBar);
+	ProcessBar(int nBar = SB_HORZ);
+public:
+public:
+	int GetBar() const;
+	void SetBar(int nBar);
+public:
+	virtual void SetRange(LONG nMin, LONG nMax);
+	virtual LONG GetRange() const;
+	virtual LONG GetMax() const;
+	virtual LONG GetMin() const;
+	virtual void SetPos(LONG nPos);
+	virtual LONG GetPos() const;
+public:
+	BOOL IsCompleted() const;
+	void Reset();
+protected:
+	virtual void OnDraw(HDC hdc, const Rect& rc);
+protected:
+	int m_nBar;
+	LONG m_nMax;
+	LONG m_nMin;
+	LONG m_nPos;
+};
+
+typedef SharedPtr<ProcessBar> PProcessBar;
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+class WFX_API Slider : public ProcessBar
+{
+public:
+	Slider(int nBar = SB_HORZ);
 	virtual ~Slider();
 public:
 	WFX_BEGIN_MSG_MAP(Slider)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
 		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		WFX_CHAIN_MSG_MAP(Widget)
+		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_CHAIN_MSG_MAP(ProcessBar)
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -286,67 +316,77 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
+	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+
+public:
+	virtual void SetThumbSize(LONG nThumbSize);
+	virtual LONG GetThumbSize() const;
+protected:
+	virtual LONG GetStep() const;
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	BOOL m_bLButtonDown;
-	BOOL m_bInSlider;
+	void SetHorzThumbRect(LONG nThumbSize, LONG x);
+	void SetVertThumbRect(LONG nThumbSize, LONG y);
+	LONG GetHorzThumbPosMin() const;
+	LONG GetHorzThumbPosMax() const;
+	LONG GetHorzThumbPos() const;
+	LONG GetVertThumbPosMin() const;
+	LONG GetVertThumbPosMax() const;
+	LONG GetVertThumbPos() const;
+	LONG CalcHorzThumbPos();
+	LONG CalcVertThumbPos();
+	void CalcHorzPos();
+	void CalcVertPos();
+protected:
 	Point m_ptLButtonDown;
-	int m_nBar;
+	Point m_ptMouseMove;
+	Rect m_rcThumb;
+	Rect m_rcThumbHolder;
+	BOOL m_bInThumb;
+	BOOL m_bDirection;
+	LONG m_nThumbSize;
 };
+
 typedef SharedPtr<Slider> PSlider;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef SharedPtr<SCROLLINFO> PSCROLLINFO;
 // ScrollBar: Common ScrollBar
-class WFX_API ScrollBar : public Widget
+class WFX_API ScrollBar : public Slider
 {
 public:
-	ScrollBar(int nBar);
+	ScrollBar(int nBar = SB_HORZ);
 	virtual ~ScrollBar();
 public:
 	WFX_BEGIN_MSG_MAP(ScrollBar)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
-		WFX_CHAIN_MSG_MAP(Widget)
+		WFX_CHAIN_MSG_MAP(Slider)
 	WFX_END_MSG_MAP()
 public:
-	int GetBar() const;
-	void SetBar(int nBar);
 	void GetScrollInfo(SCROLLINFO* pScrollInfo) const;
 	void SetScrollInfo(const SCROLLINFO* pScrollInfo);
-	void SetRange(int nMin, int nMax);
-	void SetPos(int nPos);
-	int GetPos() const;
+protected:
+	LONG CalcHorzThumbSize(const Rect& rcWid);
+	LONG CalcVertThumbSize(const Rect& rcWid);
+public:
+	virtual void SetRange(LONG nMin, LONG nMax);
+	virtual LONG GetRange() const;
+	virtual LONG GetMax() const;
+	virtual LONG GetMin() const;
+	virtual void SetPos(LONG nPos);
+	virtual LONG GetPos() const;
 public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	void SetHorzThumbPos(LONG nThumbSize, LONG x);
-	void SetVertThumbPos(LONG nThumbSize, LONG y);
-protected:
-	int m_nBar;
 	LONG m_nArrorSize;
-	Rect m_rcThumb;
-	Rect m_rcThumbHolder;
 	Rect m_rcArrow1;
 	Rect m_rcArrow2;
-	Point m_ptLButtonDown;
-	Point m_ptMouseMove;
-	BOOL m_bInThumb;
-	BOOL m_bDirection;
 protected:
 	PSCROLLINFO m_pScrollInfo;
 };
@@ -388,8 +428,6 @@ class WFX_API Button : public ImageWid
 public:
 	Button(BOOL m_bCheckable = FALSE);
 public:
-	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
-
 	WFX_BEGIN_MSG_MAP(Button)
 		WFX_MESSAGE_HANDLER(WUM_LBUTTONCLICK, OnLButtonClik)
 		WFX_CHAIN_MSG_MAP(ImageWid)
@@ -402,6 +440,8 @@ public:
 public:
 	void Check(BOOL bCheck = TRUE);
 	BOOL IsChecked() const;
+protected:
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
 	BOOL m_bLButtonDown;
 	BOOL m_bChecked;
@@ -475,22 +515,6 @@ class WFX_API Label : public Widget
 
 };
 typedef SharedPtr<Label> PLabel;
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ProcessBar : public Widget
-{
-public:
-	ProcessBar();
-public:
-	void SetRange(ULONG nMax);
-	void SetPos(ULONG nPos, BOOL bDraw = TRUE);
-	ULONG GetPos() const;
-public:
-	virtual void OnDraw(HDC hdc, const Rect& rc);
-protected:
-	ULONG m_nMax;
-	ULONG m_nPos;
-};
-typedef SharedPtr<ProcessBar> PProcessBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceWid : public Widget
 {
@@ -863,6 +887,7 @@ public:
 	void SetFocus(Widget* pWid);
 	void SetLButtonDown(Widget* pWid);
 	void ReleaseCapture();
+	BOOL IsWidget(const Widget* pWidget) const;
 public:
 	void EnableScrollBar(Widget* pWid, UINT uBarFlag, BOOL bEnable = TRUE);
 	void SetScrollInfo(Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw);

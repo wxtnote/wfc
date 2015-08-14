@@ -880,6 +880,23 @@ void Dispatcher::ReleaseCapture()
 	::ReleaseCapture();
 }
 
+BOOL Dispatcher::IsWidget( const Widget* pWidget ) const
+{
+	if (this == NULL)
+	{
+		return FALSE;
+	}
+	if (pWidget == NULL)
+	{
+		return FALSE;
+	}
+	if (pWidget->GetHwid() == INVALID_HWID)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
 void Dispatcher::ClearH2O( std::pair<HWID, Widget*>& h2o )
 {
 	h2o.first = INVALID_HWID;

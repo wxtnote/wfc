@@ -183,7 +183,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 
 #define SIZE_SCROLLBAR 11
 
-#define MIN_SCROLLBAR_SLIDER 15
+#define MIN_SCROLLBAR_THUMB 20
 
 #define WESB_NONE	0x0000
 #define WESB_VERT   0x0001

@@ -143,6 +143,22 @@ void WfxRender::DrawArror( HDC hdc, const Rect& rc, WORD wState, UINT nDirection
 	DrawSolidRect(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
 }
 
+void WfxRender::DrawComboDropDown( HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch /*= NULL*/ )
+{
+	WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
+	std::vector<Point> rgPt;
+	Point pt(rc.left + (float)rc.GetWidth() / 3, rc.top + (float)rc.GetHeight() / 3);
+	rgPt.push_back(pt);
+	pt.x = rc.left + (float)rc.GetWidth() / 2;
+	pt.y = rc.top + 2 * (float)rc.GetHeight() / 3;
+	rgPt.push_back(pt);
+	pt.x = rc.left + 2 * (float)rc.GetWidth() / 3;
+	pt.y = rc.top + (float)rc.GetHeight() / 3;
+	rgPt.push_back(pt);
+	rgPt.push_back(rgPt[0]);
+	WfxRender::DrawLines(hdc, rgPt, WBTN_BKGND_MOUSE);
+}
+
 void WfxRender::GenerateClip( HDC hDC, const Rect& rcItem, RenderClip& clip )
 {
 	Rect rcClip;
@@ -472,10 +488,27 @@ void WfxRender::DrawProcessBar( HDC hdc, const Rect& rc, WORD wState, ULONG nMax
 
 void WfxRender::DrawLine( HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel /*= 1*/ )
 {
-	MoveToEx(hdc, ptStart.x, ptStart.y, NULL);
+	::MoveToEx(hdc, ptStart.x, ptStart.y, NULL);
 	HPEN hPen = ::CreatePen(PS_SOLID, nPixel, clr);
 	HGDIOBJ hGdiObj = ::SelectObject(hdc, hPen);
 	::LineTo(hdc, ptEnd.x, ptEnd.y);
+	::SelectObject(hdc, hGdiObj);
+	::DeleteObject(hPen);
+}
+
+void WfxRender::DrawLines( HDC hdc, const std::vector<Point>& rgPt, COLORREF clr, int nPixel /*= 1*/ )
+{
+	if (rgPt.size() == 0)
+	{
+		return;
+	}
+	HPEN hPen = ::CreatePen(PS_SOLID, nPixel, clr);
+	HGDIOBJ hGdiObj = ::SelectObject(hdc, hPen);
+	::MoveToEx(hdc, rgPt[0].x, rgPt[0].y, NULL);
+	for (ULONG i = 1; i < rgPt.size(); i++)
+	{
+		::LineTo(hdc, rgPt[i].x, rgPt[i].y);
+	}
 	::SelectObject(hdc, hGdiObj);
 	::DeleteObject(hPen);
 }

@@ -505,6 +505,12 @@ LRESULT Dispatcher::OnNotify( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return lResult;
 }
 
+LRESULT Dispatcher::OnKillFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return 1;
+}
+
+
 LRESULT Dispatcher::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Point pt(lParam);
@@ -522,8 +528,8 @@ LRESULT Dispatcher::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 			{
 				m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, (WPARAM)pWid->GetHwid());
 			}
-			pWid->SendWidMessage(WM_SETFOCUS, (WPARAM)m_h2oFocused.first);
 		}
+		pWid->SendWidMessage(WM_SETFOCUS, (WPARAM)m_h2oFocused.first);
 		SetCapture(pWid);
 		SetFocus(pWid);
 		SetLButtonDown(pWid);
@@ -930,6 +936,7 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 	WFX_CONDITION(pWid != NULL);
 	Rect rcWid = pWid->GetRect();
 	Rect rcSB;
+	Size szVirtual = pWid->GetVirtualSize();
 	if (uBarFlag == WESB_BOTH)
 	{
 		if (bEnable)
@@ -938,6 +945,8 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 			if (pBar == NULL)
 			{
 				pBar = new ScrollBar(SB_VERT);
+				pBar->SetRange(0, szVirtual.cy);
+				rcSB = pWid->GetScrollBarRect(SB_VERT);
 				pBar->Create(rcSB, this, pWid);
 				pWid->SetScrollBar(SB_VERT, pBar);
 			}
@@ -946,6 +955,8 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 			if (pBar == NULL)
 			{
 				pBar = new ScrollBar(SB_HORZ);
+				pBar->SetRange(0, szVirtual.cx);
+				rcSB = pWid->GetScrollBarRect(SB_HORZ);
 				pBar->Create(rcSB, this, pWid);
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
@@ -970,6 +981,8 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 			if (pBar == NULL)
 			{
 				pBar = new ScrollBar(SB_HORZ);
+				pBar->SetRange(0, szVirtual.cx);
+				rcSB = pWid->GetScrollBarRect(SB_HORZ);
 				pBar->Create(rcSB, this, pWid);
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
@@ -992,6 +1005,8 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 			if (pBar == NULL)
 			{
 				pBar = new ScrollBar(WESB_VERT);
+				pBar->SetRange(0, szVirtual.cy);
+				rcSB = pWid->GetScrollBarRect(WESB_VERT);
 				pBar->Create(rcSB, this, pWid);
 				pWid->SetScrollBar(WESB_VERT, pBar);
 			}
@@ -1033,24 +1048,24 @@ void Dispatcher::SetWidRect( Widget* pWid, const Rect& rc )
 
 	Rect rcWid;
 	rcWid = pWid->GetRect();
+	pWid->SetVirtualSizeCached(FALSE);
 	Rect rcSB = rcWid;
 	Rect rcDraw = rcWid;
-	Size sz(pWid->SendWidMessage(WUM_QUERY_VIRTUAL_SIZE));
-	BOOL bOutRangeHorz = rcWid.right - rcWid.left < sz.cx;
-	BOOL bOutRangeVert = rcWid.bottom - rcWid.top < sz.cy;
+	Size szVirtual = pWid->GetVirtualSize();
+	Size szView(rcWid.GetWidth(), rcWid.GetHeight());
+	BOOL bOutRangeHorz = szView.cx < szVirtual.cx;
+	BOOL bOutRangeVert = szView.cy < szVirtual.cy;
 	if (pWid->GetSBFlag() & WESB_VERT)
 	{
 		WFX_CONDITION(pWid->GetScrollBar(SB_VERT) != NULL);
 		if (!bOutRangeVert)
 		{
-			memset(&rcSB, 0, sizeof(Rect));
+			rcSB.Empty();
+			pWid->GetScrollBar(SB_VERT)->Reset();
 		}
 		else
 		{
-			rcSB.left = rcWid.right - SIZE_SCROLLBAR - 1;
-			rcSB.right = rcSB.left + SIZE_SCROLLBAR;
-			rcSB.top += 1;
-			rcSB.bottom -= SIZE_SCROLLBAR + 1;
+			rcSB = pWid->GetScrollBarRect(SB_VERT);
 		}
 		pWid->GetScrollBar(SB_VERT)->SetRect(rcSB);
 		rcDraw.right -= rcSB.right - rcSB.left;
@@ -1061,14 +1076,12 @@ void Dispatcher::SetWidRect( Widget* pWid, const Rect& rc )
 		WFX_CONDITION(pWid->GetScrollBar(SB_HORZ) != NULL);
 		if (!bOutRangeHorz)
 		{
-			memset(&rcSB, 0, sizeof(Rect));
+			rcSB.Empty();
+			pWid->GetScrollBar(SB_HORZ)->Reset();
 		}
 		else
 		{
-			rcSB.left += 1;
-			rcSB.right -= SIZE_SCROLLBAR + 1;
-			rcSB.top = rcWid.top + rcWid.bottom - rcWid.top - SIZE_SCROLLBAR - 1;
-			rcSB.bottom = rcSB.top + SIZE_SCROLLBAR;
+			rcSB = pWid->GetScrollBarRect(SB_HORZ);
 		}
 		pWid->GetScrollBar(SB_HORZ)->SetRect(rcSB);
 		rcDraw.bottom -= rcSB.bottom - rcSB.top;

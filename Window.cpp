@@ -255,8 +255,8 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 			LRESULT lRes = ::CallWindowProcW(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
 			::SetWindowLongPtrW(pThis->m_hWnd, GWLP_USERDATA, 0L);
 			if( pThis->m_bSubclassed ) pThis->UnSubClass();
-			pThis->OnFinalMessage(hWnd);
 			pThis->m_hWnd = NULL;
+			pThis->OnFinalMessage(hWnd);
 			return lRes;
 		}
 	}
@@ -286,8 +286,8 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 			LRESULT lRes = ::CallWindowProc(pThis->m_OldWndProc, hWnd, uMsg, wParam, lParam);
 			if( pThis->m_bSubclassed ) pThis->UnSubClass();
 			::SetPropW(hWnd, L"WndX", NULL);
-			pThis->OnFinalMessage(hWnd);
 			pThis->m_hWnd = NULL;
+			pThis->OnFinalMessage(hWnd);
 			return lRes;
 		}
 	}
@@ -414,6 +414,7 @@ BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
 
 void InPlaceWnd::OnFinalMessage( HWND hWnd )
 {
+	m_pOwner->Reset();
 	delete this;
 }
 

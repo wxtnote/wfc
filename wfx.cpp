@@ -224,6 +224,12 @@ Size::operator LPSIZE()
 {
 	return (tagSIZE*)this;
 }
+
+Size::operator LPARAM()
+{
+	return MAKELPARAM(cx, cy);
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Point::Point( )
 {

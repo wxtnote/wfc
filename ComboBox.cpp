@@ -16,26 +16,32 @@
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ComboWnd::ComboWnd()
-: m_pRoot(new Widget)
+: m_pListCtrl(new ListCtrl)
 {
 }
 
 void ComboWnd::OnInPlaceWindowKillFocus()
 {
-
+	LONG nCurrent = m_pListCtrl->GetCurrentRow();
+	if (nCurrent != -1)
+	{
+		m_pOwner->SendWidMessage(WUM_COMBO_SET_SEL, nCurrent);
+		m_pOwner->InvalidWid();
+	}
 }
 
 HWND ComboWnd::CreateInPlaceWindow()
 {
-	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	WFX_CONDITION(pComboBox != NULL);
-	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
-	Rect rcWid = pComboBox->GetRect();
+	WFX_CONDITION(m_pOwner != NULL);
+	WFX_CONDITION(m_pOwner->m_pDispatch != NULL);
+	Size szCombo = m_pOwner->SendWidMessage(WUM_COMBO_GET_SIZE);
+	Rect rcWid = m_pOwner->GetRect();
 	Rect rc = rcWid;
+	rc.right = rc.left + szCombo.cx;
 	rc.top = rc.bottom;
-	rc.bottom = rc.top + pComboBox->GetSize() * pComboBox->GetItemHeight(0);
-	MapWindowRect(pComboBox->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);
-	Create(pComboBox->m_pDispatch->GetHwnd(), NULL, WS_POPUP | WS_BORDER, WS_EX_TOOLWINDOW, rc);
+	rc.bottom = rc.top + szCombo.cy;
+	MapWindowRect(m_pOwner->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);
+	Create(m_pOwner->m_pDispatch->GetHwnd(), NULL, WS_POPUP | WS_BORDER, WS_EX_TOOLWINDOW, rc);
 	HWND hWndParent = m_hWnd;
 	while( ::GetParent(hWndParent) != NULL ) hWndParent = ::GetParent(hWndParent);
 	::ShowWindow(m_hWnd, SW_SHOW);
@@ -51,61 +57,73 @@ LPCWSTR ComboWnd::GetWindowClassName() const
 
 LRESULT ComboWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	WFX_CONDITION(pComboBox != NULL);
-	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
 	Rect rc;
-	m_pRoot->Create(rc, m_pDispatch.get());
-	ULONG lItems = pComboBox->GetSize();
-	Widget* pChild = NULL;
-	m_rgpItems.clear();
-	for (ULONG i = 0; i < lItems; i++)
+	LONG nItems = m_pOwner->SendWidMessage(WUM_COMBO_GET_CNT);
+	m_pListCtrl->Create(rc, m_pDispatch.get());
+	for (int i = 0; i < 1; i++)
 	{
-		pChild = pComboBox->GetWid(i);
-		if (pChild != NULL)
-		{
-			pChild->Create(rc, m_pDispatch.get(), m_pRoot.get());
-			m_rgpItems.push_back(pChild);
-		}
+		String strCol;
+		strCol.Format(L"LIE%d", i);
+		m_pListCtrl->AddColumn(strCol, 100, 0, 0);
 	}
-	return 0;
+	for (int i = 0; i < nItems; i++)
+	{
+		m_pListCtrl->AddRow();
+	}
+	m_pListCtrl->SetRowNumBarWidth(0);
+	m_pListCtrl->SetHeadHeight(0);
+	m_pListCtrl->EnableScrollBar(WESB_VERT);
+	return 1;
 }
 
 LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	WFX_CONDITION(pComboBox != NULL);
-	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
-	Rect rc;
-	GetClientRect(rc);
-	Rect rcWid = rc;
-	WFX_CONDITION(m_pRoot != NULL);
-	m_pRoot->SetRect(rcWid);
-	rcWid.bottom = rcWid.top + 30;
-	ULONG lItems = pComboBox->GetSize();
-	for (ULONG i = 0; i < lItems; i++)
+	Rect rcClient;
+	GetClientRect(rcClient);
+	m_pListCtrl->SetRect(rcClient);
+	return 1;
+}
+
+LRESULT ComboWnd::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	m_pLButtonDown = lParam;
+	return m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+}
+
+LRESULT ComboWnd::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	LRESULT lResult = m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+	if (m_pListCtrl->InFunctionAera(lParam) && m_pListCtrl->InFunctionAera(m_pLButtonDown))
 	{
-		m_rgpItems[i]->SetRect(rcWid);
-		rcWid.top += rcWid.bottom - rcWid.top;
+		SendWidMessage(WM_KILLFOCUS);
 	}
-	
-	return 0;
+	m_pLButtonDown.Empty();
+	return lResult;
 }
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-ULONG ComboBox::GetItemHeight( ULONG nIndex ) const
+ComboBox::ComboBox()
+: m_nSelected(-1)
+, m_pTextBox(new TextBox)
 {
-	nIndex;
-	return 15;
+
 }
 
-ULONG ComboBox::GetSize() const
+LRESULT ComboBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return 10;
+	Rect rc;
+	m_pTextBox->Create(rc, m_pDispatch, this);
+	return 1;
 }
 
-ULONG ComboBox::GetSel() const
+LRESULT ComboBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return 0;
+	Rect rcWid(GetRect());
+	m_rcDropDown = rcWid;
+	m_rcDropDown.left = rcWid.right - 15;
+	rcWid.right = rcWid.right - m_rcDropDown.GetWidth();
+	m_pTextBox->SetRect(rcWid);
+	return 1;
 }
 
 BOOL ComboBox::Initial()
@@ -115,19 +133,41 @@ BOOL ComboBox::Initial()
 	return TRUE;
 }
 
-Widget* ComboBox::GetWid( ULONG nIndex ) const
+void ComboBox::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-	if (nIndex == 0)
-	{
-		return new CheckBoxItem;
-	}
-	if (nIndex == 1)
-	{
-		return new RadioButtonItem;
-	}
-	if (nIndex == 2)
-	{
-		return new TextBox;
-	}
-	return new Widget;
+	WfxRender::DrawComboDropDown(hdc, m_rcDropDown, GetState());
+}
+
+LRESULT ComboBox::OnGetComboSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return Size(100, 400);
+}
+
+LRESULT ComboBox::OnGetCount( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return 300;
+}
+
+LRESULT ComboBox::OnGetItemText( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	static String strText;
+	strText.Format(L"Item = %d", (LONG)wParam);
+	return (LRESULT)strText.c_str();
+}
+
+LRESULT ComboBox::OnGetItemHeight( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return 20;
+}
+
+LRESULT ComboBox::OnGetSelectedItem( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return m_nSelected;
+}
+
+LRESULT ComboBox::OnSetSelectedItem( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	m_nSelected = (LONG)wParam;
+	m_pTextBox->SetText((WCHAR*)SendWidMessage(WUM_COMBO_GET_ITEM_TEXT, m_nSelected));
+	return 1;
 }

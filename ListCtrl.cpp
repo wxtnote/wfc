@@ -432,7 +432,7 @@ void HeaderCtrl::CalcCellRect()
 	m_rgRowNumRect.right = m_rgRowNumRect.left + nRowNumBarWidth;
 	Rect rcItem = rcWid;
 	rcItem.left += nRowNumBarWidth;
-	for (LONG nCol = nStartCol; nCol <= nEndCol; nCol++)
+	for (LONG nCol = nStartCol; nCol <= nEndCol && nCol < m_rgpHdi.size(); nCol++)
 	{
 		rcItem.right = rcItem.left + m_rgpHdi[nCol]->cx;
 		m_rgpHdi[nCol]->rcPos = rcItem;
@@ -532,6 +532,7 @@ VorticalLayerCtrl::VorticalLayerCtrl()
 
 ULONG VorticalLayerCtrl::AddItem()
 {
+	SetVirtualSizeCached(FALSE);
 	m_pRoot->AddChild(PTNode(new TNode));
 	CacheInfo chinfo(1, TRUE);
 	m_rgCacheInfo.push_back(chinfo);
@@ -542,6 +543,7 @@ ULONG VorticalLayerCtrl::InsertItem(ULONG nItem)
 {
 	if (m_pRoot->InsertChild(nItem, PTNode(new TNode)) != 0)
 	{
+		SetVirtualSizeCached(FALSE);
 		CacheInfo chinfo(1, TRUE);
 		WFX_CONDITION(nItem + 1 <= m_rgCacheInfo.size());
 		m_rgCacheInfo.insert(m_rgCacheInfo.begin() + nItem + 1, chinfo);
@@ -554,6 +556,7 @@ ULONG VorticalLayerCtrl::InsertSubItem(ULONG nItem)
 	TNode* pNode = m_pRoot->GetAt(nItem);
 	if (pNode != NULL)
 	{
+		SetVirtualSizeCached(FALSE);
 		pNode->AddChild(PTNode(new TNode));
 		if (pNode->IsExpanded())
 		{
@@ -697,22 +700,17 @@ LRESULT ListCtrl::OnSize( UINT uMsg,
 	rc.right -= 1;
 	rc.top += 1;
 	m_pHeadCtrl->SetRect(rc);
-	BOOL bCalcRow = CalcRow();
-	BOOL bCalcCol = CalcCol();
-	if (bCalcRow || bCalcCol)
-	{
-		CalcCellRect();
-		if (bCalcCol)
-		{
-			m_pHeadCtrl->CalcCellRect();
-		}
-	}
+	CalcRow();
+	CalcCol();
+	CalcCellRect();
+	m_pHeadCtrl->CalcCellRect();
 	return 0;
 }
 
 ULONG ListCtrl::AddColumn(const String& strName, 
 				UINT nWidth, DWORD dwFormat, ULONG nCellType, BOOL bAdjust /*= FALSE*/)
 {
+	SetVirtualSizeCached(FALSE);
 	HeaderInfo hi;
 	hi.cx = nWidth;
 	hi.strText = strName;
@@ -732,6 +730,7 @@ ULONG ListCtrl::InsertColumn(ULONG nCol, const String& strName,
 						   ULONG nCellType,
 						   BOOL bAdjust /*= FALSE*/)
 {
+	SetVirtualSizeCached(FALSE);
 	HeaderInfo hi;
 	hi.cx = nWidth;
 	hi.strText = strName;
@@ -884,9 +883,9 @@ COLORREF GetColor(ULONG nLayer)
 }
 void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 {
+	Rect rc = GetRect();
 	if (!Verify())
 	{
-		Rect rc = GetRect();
 		WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
 		return;
 	}
@@ -900,6 +899,7 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 	LONG nLayerOffset = 0;
 	LONG nTotalRow = GetTotalRows();
 	LONG nTotalCol = GetTotalColumns();
+	ULONG nSeqBarWidth = GetRowNumBarWidth();
 	for (LONG nRow = m_nStartRow, nRowNum = 0; nRow <= m_nEndRow; nRow++, nRowNum++)
 	{
 		pCell = GetCell(0, 0);
@@ -951,7 +951,6 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 				strCellText, WBTN_BKGND_MOUSE, DT_VCENTER | DT_SINGLELINE | DT_CENTER);
 		}
 	}
-	Rect rc = GetRect();
 	WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
 }
 
@@ -1002,6 +1001,9 @@ LRESULT ListCtrl::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	{
 		return 0;
 	}
+	m_ptMouseMove = lParam;
+	SetWidTimer(LIST_TIMER_MOUSEMOVE, 10);
+	return 1;
 	Point pt(lParam);
 	std::pair<CellID, Rect> cellpt;
 	std::pair<Cell*, Rect> cell;
@@ -1056,6 +1058,40 @@ LRESULT ListCtrl::OnCellExpand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	BOOL bExpanded = IsExpanded(m_cellSelected.m_nRow);
 	Expand(m_cellSelected.m_nRow, !bExpanded);
 	InvalidWid();
+	return 1;
+}
+
+LRESULT ListCtrl::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (wParam == LIST_TIMER_MOUSEMOVE)
+	{
+		KillWidTimer(LIST_TIMER_MOUSEMOVE);
+		Point pt = m_ptMouseMove;//(lParam);
+		std::pair<CellID, Rect> cellpt;
+		std::pair<Cell*, Rect> cell;
+		CellID cellMouseLeave;
+		CellID cellMouseMove;
+		Cell* pCell = NULL;
+		if (GetCellID(pt, cellpt))
+		{
+			cellMouseMove = cellpt.first;
+			if (cellMouseMove != m_cellMouseMove)
+			{
+				cellMouseLeave = m_cellMouseMove;
+				m_cellMouseMove = cellMouseMove;
+				TRACE(L"cellMouseLeave.m_nRow = %d, cellMouseLeave.m_nCol = %d", cellMouseLeave.m_nRow, cellMouseLeave.m_nCol);
+				TRACE(L"m_cellMouseMove.m_nRow = %d, m_cellMouseMove.m_nCol = %d", m_cellMouseMove.m_nRow, m_cellMouseMove.m_nCol);
+			}
+		}
+		if (GetCellIndirect(cellMouseLeave, cell))
+		{
+			cell.first->SendWidMessage(WM_MOUSELEAVE, (WPARAM)&cell.second);
+		}
+		if (GetCellIndirect(m_cellMouseMove, cell))
+		{
+			cell.first->SendWidMessage(WM_MOUSEMOVE, (WPARAM)&cell.second);
+		}
+	}
 	return 1;
 }
 
@@ -1168,6 +1204,16 @@ void ListCtrl::SetEndCol( LONG nCol )
 	m_nEndCol = nCol;
 }
 
+LONG ListCtrl::GetCurrentRow() const
+{
+	return m_cellSelected.m_nRow;
+}
+
+LONG ListCtrl::GetCurrentCol() const
+{
+	return m_cellSelected.m_nCol;
+}
+
 Rect ListCtrl::GetCellRect( ULONG nRow, ULONG nCol )
 {
 	Rect rcCell;
@@ -1208,8 +1254,9 @@ LRESULT ListCtrl::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	return 0;
 }
 
-Size ListCtrl::EstimateVirualSize()
+Size ListCtrl::CalcVirtualSize()
 {
+	SetVirtualSizeCached();
 	Size sz;
 	int nTotalRow = GetTotalRows();
 	for (int i = 0; i < nTotalRow; i++)
@@ -1234,9 +1281,11 @@ BOOL ListCtrl::CalcCol()
 	TRACE(L"nOffset = %d", nOffset);
 	ULONG nTotalCol = GetTotalColumns();
 	LONG nSumWidth = 0;
+	LONG nColWidth = 0;
 	for (ULONG nCol = 0; nCol < nTotalCol; nCol++)
 	{
-		nSumWidth += GetColumnWidth(nCol);
+		nColWidth = GetColumnWidth(nCol);
+		nSumWidth += nColWidth;
 		if (nSumWidth >= nOffset)
 		{
 			m_nStartCol = nCol;
@@ -1335,8 +1384,6 @@ void ListCtrl::CalcCellRect()
 		{
 			nWidth = GetColumnWidth(nCol);
 			rcCell.right = rcCell.left + nWidth;
-			if (rcCell.right > rcWid.right)
-				rcCell.right = rcWid.right;
 			m_rgRect.insert(std::make_pair(CellID(nRow, nCol), rcCell));
 			m_rgRectFast[nRow - m_nStartRow][nCol - m_nStartCol] = rcCell;
 			rcCell.left += rcCell.right - rcCell.left;

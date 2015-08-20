@@ -11,5 +11,13 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
+
+void Label::OnDraw( HDC hdc, const Rect& rc )
+{
+	Rect rcDraw = GetDrawRect();
+	rcDraw.left -= GetHOffset();
+	WfxRender::DrawText(hdc, rcDraw, GetText(), WBTN_BKGND_MOUSE, DT_VCENTER | DT_LEFT);
+}

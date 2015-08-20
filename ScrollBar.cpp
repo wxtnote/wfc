@@ -138,7 +138,7 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		nThumbSize = CalcVertThumbSize(rcWid);
 		SetThumbSize(nThumbSize);
 		LONG y = CalcVertThumbPos();
-		y -= nThumbSize / 2;
+		y -= WFX_ROUND((float)nThumbSize / 2);
 		SetVertThumbRect(nThumbSize, y);
 	}
 	else
@@ -150,7 +150,7 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		nThumbSize = CalcHorzThumbSize(rcWid);
 		SetThumbSize(nThumbSize);
 		LONG x = CalcHorzThumbPos();
-		x -= nThumbSize / 2;
+		x -= WFX_ROUND((float)nThumbSize / 2);
 		SetHorzThumbRect(nThumbSize, x);
 	}
 
@@ -184,6 +184,13 @@ LONG ScrollBar::GetPos() const
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	return m_pScrollInfo->nPos;
+}
+
+
+void ScrollBar::Reset()
+{
+	WFX_CONDITION(m_pScrollInfo != NULL);
+	m_pScrollInfo->nPos = m_pScrollInfo->nMin;
 }
 
 void ScrollBar::OnDraw( HDC hdc, const Rect& rcPaint )

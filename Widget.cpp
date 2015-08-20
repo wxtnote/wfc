@@ -28,6 +28,7 @@ AttrBase::AttrBase(Widget* pParent /*= NULL*/)
 , m_clrFrame(WID_FRAME_STATIC)
 , m_wState(WID_STATE_STATIC)
 , m_pParent(pParent)
+, m_bCachedVirtualSize(FALSE)
 {
 
 }
@@ -130,6 +131,34 @@ void AttrBase::SetToolTip( const String& strToolTip )
 {
 	m_strToolTip = strToolTip;
 }
+
+Size AttrBase::GetVirtualSize()
+{
+	if (m_bCachedVirtualSize)
+	{
+		return m_szVirtualSize;
+	}
+	m_szVirtualSize = CalcVirtualSize();
+	return m_szVirtualSize;
+}
+
+Size AttrBase::CalcVirtualSize()
+{
+	SetVirtualSizeCached();
+	WFX_CONDITION(FALSE);
+	return Size();
+}
+
+BOOL AttrBase::IsVirtualSizeCached() const
+{
+	return m_bCachedVirtualSize;
+}
+
+void AttrBase::SetVirtualSizeCached( BOOL bCached /*= TRUE*/ )
+{
+	m_bCachedVirtualSize = bCached;
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Widget::Widget(void)
 : m_bNC(FALSE)
@@ -139,9 +168,6 @@ Widget::Widget(void)
 , m_pHScrollbar(NULL)
 , m_uBarFlag(WESB_NONE)
 , m_wShow(SW_SHOW)
-, m_nHorzPosOffset(0)
-, m_nVertPosOffset(0)
-, m_bVirtualSizeValid(FALSE)
 , m_nID(0)
 {
 	
@@ -241,8 +267,6 @@ void Widget::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	Rect rcWid = GetRect();
 	Rect rc = rcWid;
-	rc.left = rc.left - m_nHorzPosOffset;
-	rc.top = rc.top - m_nVertPosOffset;
 	WfxRender::DrawSolidRect(hdc, rc, WID_BKGND_STATIC, m_pDispatch);
 	WfxRender::DrawText(hdc, rc, GetText(), RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
 	WfxRender::DrawFrame(hdc, rcWid, WBTN_BKGND_MOUSE, m_pDispatch);
@@ -472,6 +496,44 @@ BOOL Widget::ScrollWid( int XAmount, int YAmount )
 	return TRUE;
 }
 
+BOOL Widget::InFunctionAera( const Point& pt )
+{
+	return m_rcDraw.PtInRect(pt);
+}
+
+Rect Widget::GetScrollBarRect( int nBar )
+{
+	Rect rcWid = GetRect();
+	Rect rcScrollBar = rcWid;
+	if (SB_HORZ == nBar)
+	{
+		if (m_uBarFlag & WESB_VERT)
+		{
+			rcScrollBar.top = rcWid.bottom - SIZE_SCROLLBAR;
+		}
+		else
+		{
+			rcScrollBar.Empty();
+		}
+	}
+	else
+	{
+		if (m_uBarFlag & WESB_VERT)
+		{
+			rcScrollBar.left = rcWid.right - SIZE_SCROLLBAR;
+			if (m_uBarFlag & WESB_HORZ)
+			{
+				rcScrollBar.bottom = rcWid.bottom - SIZE_SCROLLBAR;
+			}
+		}
+		else
+		{
+			rcScrollBar.Empty();
+		}
+	}
+	return rcScrollBar;
+}
+
 LRESULT Widget::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	return 0;
@@ -505,69 +567,6 @@ LRESULT Widget::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	return 0;
 }
 
-LRESULT Widget::OnQueryVirtualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	/*if (m_bVirtualSizeValid)
-	{
-		return MAKELRESULT(m_szVirtual.cx, m_szVirtual.cy);
-	}*/
-	m_szVirtual = EstimateVirualSize();
-	m_bVirtualSizeValid = TRUE;
-	return MAKELRESULT(m_szVirtual.cx, m_szVirtual.cy);
-}
-
-LRESULT Widget::OnGetVirtualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	return MAKELRESULT(m_szVirtual.cx, m_szVirtual.cy);
-}
-
-void Widget::SetVirtualSizeValid( BOOL bValid /*= TRUE*/ )
-{
-	m_bVirtualSizeValid = bValid;
-}
-
-Size Widget::EstimateVirualSize()
-{
-	return WfxRender::EstimateWidgetSize(GetRect(), 
-		GetText(), GetState(), m_pDispatch);
-}
-
-LRESULT Widget::OnQueryVisualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	Rect rcWid = GetRect();
-	return MAKELRESULT(rcWid.GetWidth(), rcWid.GetHeight());
-}
-
-LRESULT Widget::OnScrollBarOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	ScrollBar* pScrollBar = GetScrollBar(wParam);
-	if (pScrollBar == NULL)
-	{
-		return FALSE;
-	}
-
-	SharedPtr<SCROLLINFO> psinfo(new SCROLLINFO);
-	psinfo->cbSize = sizeof(SCROLLINFO);
-	pScrollBar->GetScrollInfo(psinfo.get());
-
-	TRACE(L"nPos = %d", psinfo->nPos);
-	float fOffset = 0;
-	Rect rcDraw = GetDrawRect();
-	if (wParam == SB_HORZ)
-	{
-		fOffset = (rcDraw.right - rcDraw.left) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
-		fOffset *= (float)m_szVirtual.cx / (float)(m_rcDraw.right - m_rcDraw.left);
-		SetHOffset(fOffset);
-	}
-	else
-	{
-		fOffset = (rcDraw.bottom - rcDraw.top) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
-		fOffset *= (float)m_szVirtual.cy / (float)(m_rcDraw.bottom - m_rcDraw.top);
-		SetVOffset(fOffset);
-	}
-	return 1;
-}
-
 LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	InvalidWid();
@@ -576,15 +575,21 @@ LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
+	LRESULT lResult = 0;
 	if (m_pParent != NULL)
 	{
-		if (!m_pParent->SendWidMessage(uMsg, wParam, lParam))
+		lResult = m_pParent->SendWidMessage(uMsg, wParam, lParam);
+		if (!lResult)
 		{
 			Widget* pParent = m_pParent->GetParent();
 			if (pParent != NULL)
 			{
 				return pParent->SendWidMessage(uMsg, wParam, lParam);
 			}
+		}
+		else
+		{
+			return lResult;
 		}
 	}
 	return 0;
@@ -602,27 +607,20 @@ void Widget::SetDrawRect( const Rect& rc )
 
 LONG Widget::GetVOffset() const
 {
-	return m_nVertPosOffset;
-}
-
-void Widget::SetVOffset( LONG nOffset )
-{
-	m_nVertPosOffset = nOffset;
+	if (GetScrollBar(SB_VERT) != NULL)
+	{
+		return GetScrollBar(SB_VERT)->GetPos();
+	}
+	return 0;
 }
 
 LONG Widget::GetHOffset() const
 {
-	return m_nHorzPosOffset;
-}
-
-void Widget::SetHOffset( LONG nOffset )
-{
-	m_nHorzPosOffset = nOffset;
-}
-
-Size Widget::GetVirtualSize() const
-{
-	return m_szVirtual;
+	if (GetScrollBar(SB_HORZ) != NULL)
+	{
+		return GetScrollBar(SB_HORZ)->GetPos();
+	}
+	return 0;
 }
 
 UINT Widget::GetID() const
@@ -633,6 +631,11 @@ UINT Widget::GetID() const
 void Widget::SetID( UINT nID )
 {
 	m_nID = nID;
+}
+
+Size Widget::CalcVirtualSize()
+{
+	return Size();
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 UnitBase::UnitBase(Widget* pWid /*= NULL*/)
@@ -739,4 +742,9 @@ LRESULT InPlaceWid::OnSetFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		return 0;
 	}
 	return 1;
+}
+
+void InPlaceWid::Reset()
+{
+	m_pWindow = NULL;
 }

@@ -21,11 +21,11 @@ class TNode;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 struct WFX_API HeaderInfo
 {
-	ULONG						cx;
+	LONG						cx;
 	String						strText;
 	PImage						pImage;
 	DWORD						dwFormat;
-	ULONG						nOrder;
+	LONG						nOrder;
 	DWORD						dwState;
 	Rect						rcPos;
 	ULONG						m_nType;
@@ -185,11 +185,12 @@ public:
 protected:
 	BOOL Verify() const;
 protected:
-	std::vector<SharedPtr<HeaderInfo> > m_rgpHdi;
+	std::vector<PHeaderInfo> m_rgpHdi;
 	Rect m_rgRowNumRect;
 	LONG m_nSelected;
 	BOOL m_bAscendSort;
 };
+typedef SharedPtr<HeaderCtrl> PHeadCtrl;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API CellID
 {
@@ -238,6 +239,7 @@ protected:
 	BOOL m_bCached;
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+#define LIST_TIMER_MOUSEMOVE 1121
 class WFX_API ListCtrl : public VorticalLayerCtrl
 {
 public:
@@ -257,6 +259,7 @@ public:
 		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 		WFX_MESSAGE_HANDLER(WUM_LC_CELL_DRAW, OnCellDraw)
 		WFX_MESSAGE_HANDLER(WUM_LC_CELL_EXPAND, OnCellExpand)
+		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
@@ -285,6 +288,8 @@ public:
 	wfx_msg LRESULT OnCellDraw(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnCellExpand(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
 	HeaderCtrl* GetHeaderCtrl() const;
@@ -323,6 +328,8 @@ public:
 	void SetStartCol(LONG nCol);
 	LONG GetEndCol() const;
 	void SetEndCol(LONG nCol);
+	LONG GetCurrentRow() const;
+	LONG GetCurrentCol() const;
 public:
 	ULONG AddColumn(const String& strName, 
 		UINT nWidth, DWORD dwFormat, ULONG nCellType, BOOL bAdjust = FALSE);
@@ -339,7 +346,7 @@ protected:
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	virtual Size EstimateVirualSize();
+	virtual Size CalcVirtualSize();
 protected:
 	BOOL CalcCol();
 	BOOL CalcRow();
@@ -347,7 +354,7 @@ protected:
 	BOOL CalcPos(int nBar, BOOL bFurther);
 	BOOL Verify() const;
 protected:
-	SharedPtr<HeaderCtrl> m_pHeadCtrl;
+	PHeadCtrl m_pHeadCtrl;
 	std::map<CellID, Rect> m_rgRect;
 	std::vector<Rect> m_rgRowNumRect;
 	ULONG m_nHeadHeight;
@@ -361,8 +368,10 @@ protected:
 	CellID m_cellSelected;
 	CellID m_cellMouseMove;
 	BOOL m_bHasSubItem;
+	Point m_ptMouseMove;
 	std::vector<std::vector<Rect> > m_rgRectFast;
 };
+typedef SharedPtr<ListCtrl> PListCtrl;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TreeCtrl : public VorticalLayerCtrl
 {

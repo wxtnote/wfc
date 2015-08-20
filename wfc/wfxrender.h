@@ -65,6 +65,7 @@ public:
 	static void DrawText(HDC hdc, const Rect& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, Dispatcher* pDispatch = NULL);
 	static void DrawThumb(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
 	static void DrawArror(HDC hdc, const Rect& rc, WORD wState, UINT nDirection, Dispatcher* pDispatch = NULL);
+	static void DrawComboDropDown(HDC hdc, const Rect& rc, WORD wState, Dispatcher* pDispatch = NULL);
 	static void GenerateClip(HDC hdc, const Rect& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const Rect& rcPaint,  DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
@@ -73,6 +74,7 @@ public:
 	static void DrawLayerCell(HDC hdc, const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
 	static void DrawLine(HDC hdc, const Point& ptStart, const Point& ptEnd, COLORREF clr, int nPixel = 1);
+	static void DrawLines(HDC hdc, const std::vector<Point>& rgPt, COLORREF clr, int nPixel = 1);
 	static Size EstimateWidgetSize(const Rect& rc, const String& strText, WORD wState, Dispatcher* pDispatch = NULL);
 	static HFONT GetFontObject();
 	static void DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD dwFomat = DT_CENTER);

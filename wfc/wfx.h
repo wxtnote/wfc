@@ -133,6 +133,7 @@ public:
 	Size(LPARAM lParam);
 	void Empty();
 	operator LPSIZE();
+	operator LPARAM();
 
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -178,6 +179,8 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #ifndef TDELWND
 #define TDELWND(p) if (::IsWindow((p))) { ::DestroyWindow((p)); (p) = NULL;}
 #endif
+
+#define WFX_ROUND(float_left) (((float_left) - (LONG)(float_left) > 0.1) ? (LONG)((float_left + 1)) : (LONG)(float_left))
 
 #define INVALID_HWID NULL
 
@@ -293,6 +296,12 @@ enum Wfx_Msg
 	WUM_LC_CELL_DRAW,
 	WUM_LC_CELL_EXPAND,
 	WUM_WIDROOT_CREATE,
+	WUM_COMBO_GET_SIZE,
+	WUM_COMBO_GET_CNT,
+	WUM_COMBO_GET_ITEM_TEXT,
+	WUM_COMBO_GET_ITEM_HEIGHT,
+	WUM_COMBO_GET_SEL,
+	WUM_COMBO_SET_SEL,
 	WUM_END
 };
 

@@ -17,9 +17,16 @@ BEGIN_NAMESPACE_WFX
 
 class Widget;
 
+class WFX_API SplitBar : public Widget
+{
+
+};
+typedef SharedPtr<SplitBar> PSplitBar;
+
 class WFX_API Pane : public Widget
 {
 
 };
+
 
 END_NAMESPACE_WFX

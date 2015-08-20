@@ -49,7 +49,6 @@ public:
 		LRESULT& lResult, DWORD dwMsgMapID) = 0;
 	LRESULT SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
-
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -78,6 +77,11 @@ public:
 	virtual void SetParent(Widget* pParent);
 	virtual String GetToolTip() const;
 	virtual void SetToolTip(const String& strToolTip);
+	Size GetVirtualSize();
+	BOOL IsVirtualSizeCached() const;
+	void SetVirtualSizeCached(BOOL bCached = TRUE);
+protected:
+	virtual Size CalcVirtualSize();
 protected:
 	String m_strText;
 	String m_strToolTip;
@@ -89,8 +93,9 @@ protected:
 	PImage m_pImg;
 	Rect m_rect;
 	Widget* m_pParent;
+	Size m_szVirtualSize;
+	BOOL m_bCachedVirtualSize;
 };
-
 typedef SharedPtr<AttrBase> PBasicAttr;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Widget: the root class of ui classes
@@ -120,13 +125,8 @@ public:
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-		WFX_MESSAGE_HANDLER(WUM_QUERY_VIRTUAL_SIZE, OnQueryVirtualSize)
-		WFX_MESSAGE_HANDLER(WUM_GET_VISUAL_SIZE, OnQueryVisualSize)
-		WFX_MESSAGE_HANDLER(WUM_GET_VIRTUAL_SIZE, OnGetVirtualSize)
-		WFX_MESSAGE_HANDLER(WUM_SB_OFFSET, OnScrollBarOffset)
 		WFX_MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
 	WFX_END_MSG_MAP()
-
 public:
 	BOOL Create(const Rect& rc, Dispatcher* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
@@ -175,6 +175,10 @@ public:
 	void SetScrollInfo(int nBar, LPCSCROLLINFO lpsi, BOOL redraw);
 	void GetScrollInfo(int nBar, LPSCROLLINFO lpsi);
 	BOOL ScrollWid(int XAmount, int YAmount);
+public:
+	virtual BOOL InFunctionAera(const Point& pt);
+protected:
+	virtual Rect GetScrollBarRect(int nBar);
 protected:
 	void SetScrollBar(int nBar, ScrollBar* pScrollBar);
 	ScrollBar* GetScrollBar(int nBar) const;
@@ -203,30 +207,16 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnQueryVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnGetVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnQueryVisualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnScrollBarOffset(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
 	wfx_msg LRESULT OnHScroll(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
 	LONG GetVOffset() const;
-	void SetVOffset(LONG nOffset);
 	LONG GetHOffset() const;
-	void SetHOffset(LONG nOffset);
-	Size GetVirtualSize() const;
-	
 public:
 	UINT GetID() const;
 	void SetID(UINT nID);
-public:
-	void SetVirtualSizeValid(BOOL bValid = TRUE);
 protected:
-	virtual Size EstimateVirualSize();
+	virtual Size CalcVirtualSize();
 	// Identifier
 public:
 	HWID m_hWid;
@@ -243,13 +233,9 @@ private:
 	ScrollBar* m_pVScrollbar;
 
 	UINT m_uBarFlag;
-	LONG m_nHorzPosOffset;
-	LONG m_nVertPosOffset;
 	// Timers need to be killed.
 	std::vector<UINT_PTR> m_rgTimer;
-	// Size
-	Size m_szVirtual;
-	BOOL m_bVirtualSizeValid;
+
 	// Event ID
 	UINT m_nID;
 };
@@ -265,6 +251,7 @@ public:
 		LRESULT& lResult, DWORD dwMsgMapID);
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
+typedef SharedPtr<UnitBase> PUnitBase;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ProcessBar : public Widget
 {
@@ -283,7 +270,7 @@ public:
 	virtual LONG GetPos() const;
 public:
 	BOOL IsCompleted() const;
-	void Reset();
+	virtual void Reset();
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rc);
 protected:
@@ -292,9 +279,9 @@ protected:
 	LONG m_nMin;
 	LONG m_nPos;
 };
-
 typedef SharedPtr<ProcessBar> PProcessBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+#define SLIDER_TIMER_MOUSEMOVE 1121
 class WFX_API Slider : public ProcessBar
 {
 public:
@@ -350,7 +337,6 @@ protected:
 	BOOL m_bDirection;
 	LONG m_nThumbSize;
 };
-
 typedef SharedPtr<Slider> PSlider;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef SharedPtr<SCROLLINFO> PSCROLLINFO;
@@ -378,6 +364,7 @@ public:
 	virtual LONG GetMin() const;
 	virtual void SetPos(LONG nPos);
 	virtual LONG GetPos() const;
+	virtual void Reset();
 public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -390,7 +377,6 @@ protected:
 protected:
 	PSCROLLINFO m_pScrollInfo;
 };
-
 typedef SharedPtr<ScrollBar> PScrollBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ImageWid : public Widget
@@ -416,12 +402,6 @@ protected:
 	PImage m_pImgChecked;
 };
 typedef SharedPtr<ImageWid> PImageWid;
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API SplitterBar : public Widget
-{
-
-};
-typedef SharedPtr<SplitterBar> PSplitterBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Button : public ImageWid
 {
@@ -512,12 +492,14 @@ typedef SharedPtr<RadioButton> PRadioButton;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Label : public Widget
 {
-
+protected:
+	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
 typedef SharedPtr<Label> PLabel;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceWid : public Widget
 {
+	friend class InPlaceWnd;
 public:
 	InPlaceWid();
 public:
@@ -530,9 +512,11 @@ public:
 		BOOL& bHandled);
 protected:
 	virtual BOOL Initial() = 0;
+	void Reset();
 protected:
 	InPlaceWnd* m_pWindow;
 };
+
 typedef SharedPtr<InPlaceWid> PInPlaceWid;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TextBox : public InPlaceWid
@@ -567,12 +551,43 @@ typedef SharedPtr<TextBox> PTextBox;
 class WFX_API ComboBox : public InPlaceWid
 {
 public:
-	ULONG GetSize() const;
-	ULONG GetItemHeight(ULONG nIndex) const;
-	ULONG GetSel() const;
-	Widget* GetWid(ULONG nIndex) const;
+	ComboBox();
+public:
+	WFX_BEGIN_MSG_MAP(ComboBox)
+		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_GET_SIZE, OnGetComboSize)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_GET_CNT, OnGetCount)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_GET_ITEM_TEXT, OnGetItemText)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_GET_ITEM_HEIGHT, OnGetItemHeight)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_GET_SEL, OnGetSelectedItem)
+		WFX_MESSAGE_HANDLER(WUM_COMBO_SET_SEL, OnSetSelectedItem)
+		WFX_CHAIN_MSG_MAP(InPlaceWid)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnGetComboSize(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnGetCount(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnGetItemText(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnGetItemHeight(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnGetSelectedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSetSelectedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
 protected:
 	virtual BOOL Initial();
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
+protected:
+	LONG m_nSelected;
+	PTextBox m_pTextBox;
+	Rect m_rcDropDown;
 };
 typedef SharedPtr<ComboBox> PComboBox;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -660,7 +675,7 @@ public:
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWnd)
 		WFX_MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-		WFX_CHAIN_MSG_MAP(Window)
+		WFX_CHAIN_MSG_MAP(WidgetWnd)
 	WFX_END_MSG_MAP()
 wfx_msg LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	BOOL& bHandled);
@@ -694,6 +709,8 @@ public:
 };
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+class ListCtrl;
+typedef SharedPtr<ListCtrl> PListCtrl;
 class WFX_API ComboWnd : public InPlaceWnd
 {
 public:
@@ -702,6 +719,8 @@ public:
 	WFX_BEGIN_MSG_MAP(ComboWnd)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
 		WFX_CHAIN_MSG_MAP(InPlaceWnd)
 	WFX_END_MSG_MAP()
 public:
@@ -713,10 +732,15 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
 protected:
-	PWidget m_pRoot;
-	std::vector<Widget*> m_rgpItems;
+	Point m_pLButtonDown;
+	PListCtrl m_pListCtrl;
 };
+
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ToolTipWnd : public Window
@@ -852,6 +876,7 @@ public:
 		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 		WFX_MESSAGE_HANDLER(WM_MOUSEHOVER, OnMouseHOver)
 		WFX_MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+		WFX_MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus);
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -877,6 +902,8 @@ public:
 	wfx_msg LRESULT OnMouseHOver(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
 	Widget* GetWidPt(POINT pt);

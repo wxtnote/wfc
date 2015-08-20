@@ -47,11 +47,13 @@ LRESULT Slider::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 		m_bInThumb = FALSE;
 		if (m_nBar == SB_VERT)
 		{
-			m_bDirection = m_ptLButtonDown.y - (m_rcThumb.top + m_rcThumb.GetHeight() / 2) > 0;
+			m_bDirection = m_ptLButtonDown.y - 
+				(m_rcThumb.top + WFX_ROUND((float)m_rcThumb.GetHeight() / 2)) > 0;
 		}
 		else
 		{
-			m_bDirection = m_ptLButtonDown.x - (m_rcThumb.left + m_rcThumb.GetWidth() / 2) > 0;
+			m_bDirection = m_ptLButtonDown.x - 
+				(m_rcThumb.left + WFX_ROUND((float)m_rcThumb.GetWidth() / 2)) > 0;
 		}
 		SetWidTimer(1, 50, NULL);
 	}
@@ -167,19 +169,19 @@ LRESULT Slider::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled 
 	m_rcThumb.Empty();
 	if (SB_VERT == m_nBar)
 	{
-		m_rcThumbHolder.left = rcWid.left + rcWid.GetWidth() / 2;
+		m_rcThumbHolder.left = rcWid.left + WFX_ROUND((float)rcWid.GetWidth() / 2);
 		m_rcThumbHolder.right = m_rcThumbHolder.left + 1;
 		LONG nTop = CalcVertThumbPos();
-		nTop -= m_nThumbSize / 2;
+		nTop -= WFX_ROUND((float)m_nThumbSize / 2);
 		SetVertThumbRect(m_nThumbSize, nTop);
 
 	}
 	else
 	{
-		m_rcThumbHolder.top = rcWid.top + rcWid.GetHeight() / 2;
+		m_rcThumbHolder.top = rcWid.top + WFX_ROUND((float)rcWid.GetHeight() / 2);
 		m_rcThumbHolder.bottom = m_rcThumbHolder.top + 1;
 		LONG nLeft = CalcHorzThumbPos();
-		nLeft -= m_nThumbSize / 2;
+		nLeft -= WFX_ROUND((float)m_nThumbSize / 2);
 		SetHorzThumbRect(m_nThumbSize, nLeft);
 	}
 	return 1;
@@ -197,37 +199,37 @@ LONG Slider::GetThumbSize() const
 
 LONG Slider::GetStep() const
 {
-	return 10;
+	return 1;
 }
 
 LONG Slider::GetHorzThumbPosMin() const
 {
-	return m_rcThumbHolder.left + GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumbHolder.left + (float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetHorzThumbPosMax() const
 {
-	return m_rcThumbHolder.right - GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumbHolder.right - (float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetHorzThumbPos() const
 {
-	return m_rcThumb.left + GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumb.left + (float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetVertThumbPosMin() const
 {
-	return m_rcThumbHolder.top + GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumbHolder.top + (float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetVertThumbPosMax() const
 {
-	return m_rcThumbHolder.bottom - GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumbHolder.bottom - (float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetVertThumbPos() const
 {
-	return m_rcThumb.top + GetThumbSize() / 2;
+	return WFX_ROUND(m_rcThumb.top + (float)GetThumbSize() / 2);
 }
 
 LONG Slider::CalcHorzThumbPos()
@@ -240,7 +242,8 @@ LONG Slider::CalcHorzThumbPos()
 	LONG nPos = GetPos();
 	if (nMax - nMin > 0)
 	{
-		nThumbPos = (float)(nPos - nMin) / (float)(nMax - nMin) * (nThumbPosMax - nThumbPosMin) + nThumbPosMin;
+		nThumbPos = WFX_ROUND((float)(nPos - nMin) / 
+			(float)(nMax - nMin) * (nThumbPosMax - nThumbPosMin) + nThumbPosMin);
 	}
 	return nThumbPos;
 }
@@ -255,7 +258,8 @@ LONG Slider::CalcVertThumbPos()
 	LONG nPos = GetPos();
 	if (nMax - nMin > 0)
 	{
-		nThumbPos = (float)(nPos - nMin) / (float)(nMax - nMin) * (nThumbPosMax - nThumbPosMin) + nThumbPosMin;
+		nThumbPos = WFX_ROUND((float)(nPos - nMin) / 
+			(float)(nMax - nMin) * (nThumbPosMax - nThumbPosMin) + nThumbPosMin);
 	}
 	return nThumbPos;
 }
@@ -269,12 +273,8 @@ void Slider::CalcHorzPos()
 	LONG nMax = GetMax();
 	if (nThumbPosMax - nThumbPosMin > 0)
 	{
-		float fPos = (float)(nThumbPos - nThumbPosMin) / (float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin;
-		LONG nPos = fPos;
-		if (fPos - nPos > 0.0001)
-		{
-			nPos += 1;
-		}
+		LONG nPos = WFX_ROUND((float)(nThumbPos - nThumbPosMin) / 
+			(float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin);
 		SetPos(nPos);
 		TRACE(L"nPos=%d", nPos);
 	}
@@ -289,12 +289,8 @@ void Slider::CalcVertPos()
 	LONG nMax = GetMax();
 	if (nThumbPosMax - nThumbPosMin > 0)
 	{
-		float fPos = (float)(nThumbPos - nThumbPosMin) / (float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin;
-		LONG nPos = fPos;
-		if (fPos - nPos > 0.0001)
-		{
-			nPos += 1;
-		}
+		LONG nPos = WFX_ROUND((float)(nThumbPos - nThumbPosMin) / 
+			(float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin);
 		SetPos(nPos);
 		TRACE(L"nPos=%d", nPos);
 	}
@@ -322,7 +318,6 @@ void Slider::SetVertThumbRect( LONG nThumbSize, LONG y )
 	m_rcThumb = GetRect();
 	m_rcThumb.top = y;
 	m_rcThumb.bottom = m_rcThumb.top + nThumbSize;
-	TRACE(L"%d, %d", m_rcThumb.top, m_rcThumb.bottom);
 	if (m_rcThumb.top < m_rcThumbHolder.top)
 	{
 		m_rcThumb.top = m_rcThumbHolder.top;

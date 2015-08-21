@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,7 +9,7 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
 #include "wfxrender.h"
 
@@ -93,7 +93,7 @@ LRESULT ComboWnd::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 LRESULT ComboWnd::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	LRESULT lResult = m_pDispatch->HandleMessage(uMsg, wParam, lParam);
-	if (m_pListCtrl->InFunctionAera(lParam) && m_pListCtrl->InFunctionAera(m_pLButtonDown))
+	if (m_pListCtrl->InClientAera(lParam) && m_pListCtrl->InClientAera(m_pLButtonDown))
 	{
 		SendWidMessage(WM_KILLFOCUS);
 	}

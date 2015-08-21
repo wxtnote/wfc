@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -147,6 +147,52 @@ class WFX_API LinkCell : public Cell
 
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+struct WFX_API LCDrawItemInfo
+{
+	HDC m_hDC;
+	LONG m_nRow;
+	LONG m_nCol;
+	const Rect* m_prcItem;
+	DWORD m_dwState;
+	DWORD m_dwFormat;
+	const wchar_t* m_pszText;
+	LCDrawItemInfo()
+		: m_hDC(NULL)
+		, m_nRow(-1)
+		, m_nCol(-1)
+		, m_prcItem(NULL)
+		, m_dwState(0)
+		, m_dwFormat(0)
+		, m_pszText(NULL)
+	{
+
+	}
+	LCDrawItemInfo(HDC hDC, LONG nRow, LONG nCol, 
+		const Rect* prcItem, DWORD dwState, 
+		DWORD dwFormat, const wchar_t* pszText)
+		: m_hDC(hDC)
+		, m_nRow(nRow)
+		, m_nCol(nCol)
+		, m_prcItem(prcItem)
+		, m_dwState(dwState)
+		, m_dwFormat(dwFormat)
+		, m_pszText(pszText)
+	{
+
+	}
+	void Clear()
+	{
+		m_hDC = NULL;
+		m_nRow = -1;
+		m_nCol = -1;
+		m_prcItem = NULL;
+		m_dwState = 0;
+		m_dwFormat = 0;
+		m_pszText = NULL;
+	}
+};
+typedef SharedPtr<LCDrawItemInfo> PLCDrawItemInfo;
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API HeaderCtrl : public Widget
 {
 	friend class ListCtrl;
@@ -177,6 +223,7 @@ protected:
 	ULONG GetColumnWidth(ULONG nCol) const;
 	LONG GetSelected(POINT pt);
 	void CalcCellRect();
+	inline LCDrawItemInfo* GetDrawItemInfo() const;
 public:
 	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -186,9 +233,10 @@ protected:
 	BOOL Verify() const;
 protected:
 	std::vector<PHeaderInfo> m_rgpHdi;
-	Rect m_rgRowNumRect;
+	Rect m_rcSeqBarHead;
 	LONG m_nSelected;
 	BOOL m_bAscendSort;
+	PLCDrawItemInfo m_pDrawItemInfo;
 };
 typedef SharedPtr<HeaderCtrl> PHeadCtrl;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -260,6 +308,9 @@ public:
 		WFX_MESSAGE_HANDLER(WUM_LC_CELL_DRAW, OnCellDraw)
 		WFX_MESSAGE_HANDLER(WUM_LC_CELL_EXPAND, OnCellExpand)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		WFX_MESSAGE_HANDLER(WUM_LC_SEQHEAD_DRAW, OnMsgSeqHeadDraw)
+		WFX_MESSAGE_HANDLER(WUM_LC_HEAD_DRAW, OnMsgHeadDraw)
+		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
@@ -290,6 +341,12 @@ public:
 	wfx_msg LRESULT OnCellExpand(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMsgSeqHeadDraw(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMsgHeadDraw(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 		BOOL& bHandled);
 public:
 	HeaderCtrl* GetHeaderCtrl() const;
@@ -341,18 +398,24 @@ public:
 	ULONG Expand(ULONG nRow, BOOL bExpand = TRUE, BOOL bAdjust = FALSE);
 	BOOL IsExpanded(ULONG nRow) const;
 protected:
-	BOOL GetCellID( POINT pt, std::pair<CellID, Rect>& cellID);
+	BOOL GetCellID( POINT pt, std::pair<CellID, Rect>& cellID) const;
 	BOOL IsValidCellID(const CellID& cellID) const;
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
+	virtual void OnDrawItem(const LCDrawItemInfo* pDrawItemInfo);
+	virtual void OnDrawSeqBar(const LCDrawItemInfo* pDrawItemInfo);
+	virtual void OnDrawSeqHead(const LCDrawItemInfo* pDrawItemInfo);
+	virtual void OnDrawHeadCtrl(const LCDrawItemInfo* pDrawItemInfo);
 protected:
 	virtual Size CalcVirtualSize();
+	virtual String GetToolTip() const;
 protected:
 	BOOL CalcCol();
 	BOOL CalcRow();
 	void CalcCellRect();
-	BOOL CalcPos(int nBar, BOOL bFurther);
+	BOOL CalcPos(int nBar);
 	BOOL Verify() const;
+	inline LCDrawItemInfo* GetDrawItemInfo() const;
 protected:
 	PHeadCtrl m_pHeadCtrl;
 	std::map<CellID, Rect> m_rgRect;
@@ -371,6 +434,7 @@ protected:
 	Point m_ptMouseMove;
 	std::vector<std::vector<Rect> > m_rgRectFast;
 };
+
 typedef SharedPtr<ListCtrl> PListCtrl;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TreeCtrl : public VorticalLayerCtrl

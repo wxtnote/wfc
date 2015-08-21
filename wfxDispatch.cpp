@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,7 +9,7 @@
 // Widget Foundation Classes product.
 //
 #include "stdafx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -1086,7 +1086,7 @@ void Dispatcher::SetWidRect( Widget* pWid, const Rect& rc )
 		pWid->GetScrollBar(SB_HORZ)->SetRect(rcSB);
 		rcDraw.bottom -= rcSB.bottom - rcSB.top;
 	}
-	pWid->SetDrawRect(rcDraw);
+	pWid->SetClientRect(rcDraw);
 	pWid->SendWidMessage(WM_SIZE, 0, 0);
 }
 

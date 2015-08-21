@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,7 +9,7 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -81,16 +81,6 @@ void AttrBase::SetFrame( COLORREF clrFrame )
 COLORREF AttrBase::GetFrame() const
 {
 	return m_clrFrame;
-}
-
-void AttrBase::SetImage( const String& strImage )
-{
-	m_pImg.reset(WFX_GET_IMAGE(strImage.c_str()));
-}
-
-PImage AttrBase::GetImage() const
-{
-	return m_pImg;
 }
 
 void AttrBase::SetState( WORD wState )
@@ -214,7 +204,10 @@ BOOL Widget::Create( const Rect& rc, Dispatcher* pDispatch,
 	m_bNC = bNC;
 	SetParent(pParent);
 	SendWidMessage(WM_CREATE, 0, 0);
-	SetRect(rc);
+	if (!rc.IsEmpty())
+	{
+		SetRect(rc);
+	}
 	return TRUE;
 }
 
@@ -315,16 +308,6 @@ void Widget::EnableScrollBar( UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 	m_pDispatch->EnableScrollBar(this, uBarFlag, bEnable);
 }
 
-void Widget::SetScrollInfo( int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
-{
-
-}
-
-void Widget::GetScrollInfo( int nBar, LPSCROLLINFO lpsi )
-{
-
-}
-
 void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
 {
 	if (SB_VERT == nBar)
@@ -336,7 +319,6 @@ void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
 		m_pHScrollbar = pScrollBar;
 	}
 }
-
 
 void Widget::SetState( WORD wState )
 {
@@ -389,48 +371,6 @@ void Widget::MyShowWid( WORD wShow )
 	PostWidMessage(WM_SHOWWINDOW, m_wShow);
 }
 
-LRESULT Widget::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	if (wParam == MK_LBUTTON)
-		return 0;
-	SetState(WID_STATE_MOUSE);
-	return 0;
-}
-
-LRESULT Widget::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	SetState(WID_STATE_STATIC);
-	return 0;
-}
-
-LRESULT Widget::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	switch(wParam)
-	{
-	case WID_STATE_MOUSE:
-		{
-		
-		}
-		break;
-	case WID_STATE_STATIC:
-		{
-			
-		}
-		break;
-	case WID_STATE_PUSH:
-		{
-			
-		}
-		break;
-	default:
-		{
-			
-		}
-	}
-	InvalidWid();
-	return 0;
-}
-
 Widget::operator HWID() const
 {
 	return m_hWid;
@@ -469,18 +409,6 @@ ScrollBar* Widget::GetScrollBar( int nBar ) const
 	return m_pHScrollbar;
 }
 
-LRESULT Widget::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	SetState(WID_STATE_PUSH);
-	return 1;
-}
-
-LRESULT Widget::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	SetState(WID_STATE_MOUSE);
-	return 1;
-}
-
 UINT Widget::GetSBFlag() const
 {
 	return m_uBarFlag;
@@ -496,9 +424,9 @@ BOOL Widget::ScrollWid( int XAmount, int YAmount )
 	return TRUE;
 }
 
-BOOL Widget::InFunctionAera( const Point& pt )
+BOOL Widget::InClientAera( const Point& pt )
 {
-	return m_rcDraw.PtInRect(pt);
+	return m_rcClient.PtInRect(pt);
 }
 
 Rect Widget::GetScrollBarRect( int nBar )
@@ -595,14 +523,14 @@ LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lPar
 	return 0;
 }
 
-Rect Widget::GetDrawRect() const
+Rect Widget::GetClientRect() const
 {
-	return m_rcDraw;
+	return m_rcClient;
 }
 
-void Widget::SetDrawRect( const Rect& rc )
+void Widget::SetClientRect( const Rect& rc )
 {
-	m_rcDraw = rc;
+	m_rcClient = rc;
 }
 
 LONG Widget::GetVOffset() const
@@ -656,6 +584,58 @@ LRESULT UnitBase::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lP
 	return 0;
 }
 
+void UnitBase::OnDraw( HDC hdc, const Rect& rc )
+{
+	WfxRender::DrawSolidRect(hdc, GetRect(), RGB(255, 0, 0));
+}
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+LRESULT WidCtrlBase::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (wParam == MK_LBUTTON)
+		return 0;
+	SetState(WID_STATE_MOUSE);
+	return 1;
+}
+
+LRESULT WidCtrlBase::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	SetState(WID_STATE_STATIC);
+	return 1;
+}
+
+LRESULT WidCtrlBase::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	InvalidWid();
+	return 1;
+}
+
+LRESULT WidCtrlBase::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	SetState(WID_STATE_PUSH);
+	return 1;
+}
+
+LRESULT WidCtrlBase::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	SetState(WID_STATE_MOUSE);
+	return 1;
+}
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+BarBase::BarBase( int nBar /*= SB_HORZ*/ )
+: m_nBar(nBar)
+{
+
+}
+
+int BarBase::GetBar() const
+{
+	return m_nBar;
+}
+
+void BarBase::SetBar( int nBar )
+{
+	m_nBar = nBar;
+}
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ImageWid::ImageWid()
 {
@@ -705,26 +685,26 @@ void ImageWid::SetImage( const String& strStatic,
 	m_pImgChecked.reset(WFX_GET_IMAGE(strChecked.c_str()));
 }
 
-PImage ImageWid::GetImageFromState()
+Gdiplus::Image* ImageWid::GetImageFromState()
 {
-	PImage pImage;
+	Gdiplus::Image* pImage;
 	switch(GetState())
 	{
 	case WID_STATE_STATIC:
-		pImage = m_pImgStatic;
+		pImage = m_pImgStatic.get();
 		break;
 	case WID_STATE_MOUSE:
-		pImage = m_pImgMouse;
+		pImage = m_pImgMouse.get();
 		break;
 	case WID_STATE_PUSH:
-		pImage = m_pImgPush;
+		pImage = m_pImgPush.get();
 		break;
 	case WID_STATE_CHECKED:
-		pImage = m_pImgChecked;
+		pImage = m_pImgChecked.get();
 		break;
 	default:
 		WFX_CONDITION(FALSE);
-		pImage = m_pImgStatic;
+		pImage = m_pImgStatic.get();
 	}
 	return pImage;
 }
@@ -748,3 +728,4 @@ void InPlaceWid::Reset()
 {
 	m_pWindow = NULL;
 }
+

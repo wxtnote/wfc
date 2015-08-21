@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -121,6 +121,8 @@ public:
 	operator LPRECT();
 	operator LPCRECT();
 	BOOL PtInRect(POINT pt) const;
+	BOOL IsValid() const;
+	BOOL IsEmpty() const;
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Size : public tagSIZE
@@ -295,6 +297,8 @@ enum Wfx_Msg
 	WUM_LC_GET_PROPERTIES,
 	WUM_LC_CELL_DRAW,
 	WUM_LC_CELL_EXPAND,
+	WUM_LC_SEQHEAD_DRAW,
+	WUM_LC_HEAD_DRAW,
 	WUM_WIDROOT_CREATE,
 	WUM_COMBO_GET_SIZE,
 	WUM_COMBO_GET_CNT,

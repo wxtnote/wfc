@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,15 +9,14 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
 Button::Button(BOOL bCheckable /*= FALSE*/)
-: m_bLButtonDown(FALSE)
-, m_bChecked(FALSE)
+: m_bChecked(FALSE)
 , m_bCheckable(bCheckable)
 {
 	SetText(L"Button");
@@ -25,7 +24,7 @@ Button::Button(BOOL bCheckable /*= FALSE*/)
 
 void Button::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-	PImage pImage = GetImageFromState();
+	Gdiplus::Image* pImage = GetImageFromState();
 	if (pImage == NULL)
 	{
 		Rect rc = GetRect();

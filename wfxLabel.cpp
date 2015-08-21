@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,7 +9,15 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
+
+void Label::OnDraw( HDC hdc, const Rect& rc )
+{
+	Rect rcDraw = GetClientRect();
+	rcDraw.left -= GetHOffset();
+	WfxRender::DrawText(hdc, rcDraw, GetText(), WBTN_BKGND_MOUSE, DT_VCENTER | DT_LEFT);
+}

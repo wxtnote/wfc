@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -80,6 +80,16 @@ public:
 	static void DrawImage(HDC hdc, const PImage& pImage, const Rect& rc, DWORD dwFomat = DT_CENTER);
 protected:
 	static HFONT s_hFont;
+private:
+	// [Frame]
+	COLORREF s_clrFrameBkgndStatic;
+	// [BUTTON]
+	COLORREF s_clrBtnBkgndStatic;
+	COLORREF s_clrBtnBkgndMouse;
+	COLORREF s_clrBtnBkgndPush;
+	COLORREF s_clrBtnBkgndChecked;
+	COLORREF s_clrBtnTextStatic;
+
 };
 
 extern WfxRender::GdiPlusHelper gdiplus_init;

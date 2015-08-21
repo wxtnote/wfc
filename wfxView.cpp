@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,38 +9,23 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxfrmwk.h"
 
 USING_NAMESPACE_WFX;
 
-Document::Document()
-: m_pView(NULL)
+View::View()
+: m_pDoc(NULL)
 {
 
 }
 
-BOOL Document::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+Document* View::GetDocument() const
 {
-	return TRUE;
+	return m_pDoc;
 }
 
-BOOL Document::Open()
+void View::SetDocument( Document* pDoc )
 {
-	return TRUE;
-}
-
-BOOL Document::Close()
-{
-	return TRUE;
-}
-
-View* Document::GetView() const
-{
-	return m_pView;
-}
-
-void Document::SetView( View* pView )
-{
-	m_pView = pView;
+	m_pDoc = pDoc;
 }

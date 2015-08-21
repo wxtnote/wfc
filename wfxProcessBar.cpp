@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,29 +9,19 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
 ProcessBar::ProcessBar(int nBar /*= SB_HORZ*/)
-: m_nBar(nBar)
+: BarBase(nBar)
 , m_nMin(0)
 , m_nMax(0)
 , m_nPos(0)
 {
 
-}
-
-int ProcessBar::GetBar() const
-{
-	return m_nBar;
-}
-
-void ProcessBar::SetBar( int nBar )
-{
-	m_nBar = nBar;
 }
 
 void ProcessBar::SetRange( LONG nMin, LONG nMax )

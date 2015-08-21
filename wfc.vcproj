@@ -176,74 +176,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\App.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Button.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CheckBox.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\cmnwnd.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ComboBox.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Dispatch.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DocManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Document.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Frame.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Label.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Layout.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ListCtrl.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ProcessBar.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RadioButton.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RichEdit.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ScrollBar.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Slider.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -264,35 +196,107 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\tabctrl.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TextBox.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TreeCtrl.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\View.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\wfx.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxrender.cpp"
+				RelativePath=".\wfxApp.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Widget.cpp"
+				RelativePath=".\wfxButton.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Window.cpp"
+				RelativePath=".\wfxCheckBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxCmnWnd.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxComboBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxDispatch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxDocManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxDocument.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxFrame.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxLabel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxLayout.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxListCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxPane.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxProcessBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxRadioButton.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxRender.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxRichEdit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxScrollBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxSlider.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxTabCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxTextBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxTreeCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxView.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxWidget.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxWindow.cpp"
 				>
 			</File>
 		</Filter>
@@ -314,23 +318,23 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfx\wfxbar.h"
+				RelativePath=".\wfx\wfxBar.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxcmn.h"
+				RelativePath=".\wfc\wfxCmn.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxcmnwnd.h"
+				RelativePath=".\wfc\wfxCmnWnd.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxfrmwk.h"
+				RelativePath=".\wfc\wfxFrmwk.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxlayout.h"
+				RelativePath=".\wfc\wfxLayout.h"
 				>
 			</File>
 			<File
@@ -338,19 +342,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxpane.h"
+				RelativePath=".\wfc\wfxPane.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxrender.h"
+				RelativePath=".\wfc\wfxRender.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxtabctrl.h"
+				RelativePath=".\wfc\wfxTabctrl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxwid.h"
+				RelativePath=".\wfc\wfxWidget.h"
 				>
 			</File>
 		</Filter>

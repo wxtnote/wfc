@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -9,24 +9,19 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-void RadioButtonItem::OnDraw( HDC hdc, const Rect& rcPaint )
-{
-	SharedPtr<Gdiplus::Image> pImage = GetImage();
-	if (pImage != NULL)
-	{
-		return;
-	}
-	WfxRender::DrawRadioBoxItem(hdc, GetRect(), GetState(), IsChecked(), m_pDispatch);
-}
-
 RadioButton::RadioButton()
 {
-	m_pItem.reset(new RadioButtonItem);
 	SetText(L"Radio");
+}
+
+void RadioButton::OnDraw( HDC hdc, const Rect& rc )
+{
+	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, m_pDispatch);
+	WfxRender::DrawRadioBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), m_pDispatch);
 }

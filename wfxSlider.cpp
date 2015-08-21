@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -10,7 +10,7 @@
 //
 
 #include "stdafx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -20,11 +20,6 @@ Slider::Slider( int nBar /*= SB_HORZ*/ )
 : ProcessBar(nBar)
 , m_nThumbSize(13)
 {
-}
-
-Slider::~Slider()
-{
-
 }
 
 LRESULT Slider::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
@@ -219,17 +214,17 @@ LONG Slider::GetHorzThumbPos() const
 
 LONG Slider::GetVertThumbPosMin() const
 {
-	return WFX_ROUND(m_rcThumbHolder.top + (float)GetThumbSize() / 2);
+	return m_rcThumbHolder.top + WFX_ROUND((float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetVertThumbPosMax() const
 {
-	return WFX_ROUND(m_rcThumbHolder.bottom - (float)GetThumbSize() / 2);
+	return m_rcThumbHolder.bottom - WFX_ROUND((float)GetThumbSize() / 2);
 }
 
 LONG Slider::GetVertThumbPos() const
 {
-	return WFX_ROUND(m_rcThumb.top + (float)GetThumbSize() / 2);
+	return m_rcThumb.top + WFX_ROUND((float)GetThumbSize() / 2);
 }
 
 LONG Slider::CalcHorzThumbPos()

@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -10,7 +10,7 @@
 //
 
 #include "stdafx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -160,7 +160,6 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 void ScrollBar::SetPos( LONG nPos )
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
-	BOOL bFurther = nPos > m_pScrollInfo->nPos;
 	if (m_pScrollInfo->nPos != nPos)
 	{
 		m_pScrollInfo->nPos = nPos;
@@ -171,11 +170,11 @@ void ScrollBar::SetPos( LONG nPos )
 		SendParentMessage(WUM_SB_OFFSET, m_nBar);
 		if (m_nBar == SB_VERT) 
 		{
-			SendParentMessage(WM_VSCROLL, (WPARAM)bFurther);
+			SendParentMessage(WM_VSCROLL);
 		}
 		else
 		{
-			SendParentMessage(WM_HSCROLL,(WPARAM)bFurther);
+			SendParentMessage(WM_HSCROLL);
 		}
 	}
 }

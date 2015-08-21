@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -11,7 +11,7 @@
 #pragma once
 
 #include "wfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxrender.h"
 #include "wfxcmn.h"
 #include "wfxlayout.h"

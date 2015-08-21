@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -10,7 +10,7 @@
 //
 
 #include "StdAfx.h"
-#include "wfxwid.h"
+#include "wfxwidget.h"
 #include "wfxcmn.h"
 #include "wfxrender.h"
 
@@ -319,15 +319,13 @@ void HeaderCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	LONG nStartCol = SendParentMessage(WUM_LC_GET_PROPERTIES, LCP_START_COL);
 	LONG nEndCol = SendParentMessage(WUM_LC_GET_PROPERTIES, LCP_END_COL);
-	Cell* pCell = NULL;
 	DWORD dwState = WCS_NORMAL;
-	pCell = GetCell(0);
-	if (pCell != NULL)
-	{
-		pCell->Draw(hdc, m_rgRowNumRect, dwState, 
-			L"SEQ", WBTN_BKGND_MOUSE, 0);
-	}
-
+	LCDrawItemInfo* pDrawItemInfo = GetDrawItemInfo();
+	pDrawItemInfo->Clear();
+	pDrawItemInfo->m_hDC = hdc;
+	pDrawItemInfo->m_prcItem = &m_rcSeqBarHead;
+	pDrawItemInfo->m_dwState = dwState;
+	SendParentMessage(WUM_LC_SEQHEAD_DRAW, (WPARAM)pDrawItemInfo);
 	LONG nTotalCal = GetTotalColumns();
 	if (nTotalCal <= 0)
 	{
@@ -336,21 +334,22 @@ void HeaderCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 
 	for (LONG nCol = nStartCol; nCol <= nEndCol; nCol++)
 	{
-		pCell = GetCell(nCol);
-		if (pCell != NULL)
+		if (nCol == m_nSelected)
 		{
-			if (nCol == m_nSelected)
-			{
-				dwState |= WCS_SELECTED;
-				m_bAscendSort? dwState |= WCS_ASORT : dwState |= WCS_NASORT;
-			}
-			else
-			{
-				dwState = WCS_NORMAL;
-			}
-			pCell->Draw(hdc, m_rgpHdi[nCol]->rcPos, dwState, 
-				m_rgpHdi[nCol]->strText, WBTN_BKGND_MOUSE, m_rgpHdi[nCol]->dwFormat);
+			dwState |= WCS_SELECTED;
+			m_bAscendSort? dwState |= WCS_ASORT : dwState |= WCS_NASORT;
 		}
+		else
+		{
+			dwState = WCS_NORMAL;
+		}
+		pDrawItemInfo->m_nCol = nCol;
+		pDrawItemInfo->m_prcItem = &(m_rgpHdi[nCol]->rcPos);
+		pDrawItemInfo->m_dwState = dwState;
+		pDrawItemInfo->m_dwFormat = m_rgpHdi[nCol]->dwFormat;
+		pDrawItemInfo->m_pszText = m_rgpHdi[nCol]->strText.c_str();
+		SendParentMessage(WUM_LC_HEAD_DRAW, (WPARAM)pDrawItemInfo);
+		
 	}
 }
 
@@ -388,6 +387,7 @@ LRESULT HeaderCtrl::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 HeaderCtrl::HeaderCtrl()
 : m_nSelected(-1)
 , m_bAscendSort(FALSE)
+, m_pDrawItemInfo(new LCDrawItemInfo)
 {
 
 }
@@ -428,8 +428,8 @@ void HeaderCtrl::CalcCellRect()
 	}
 	ULONG nRowNumBarWidth = SendParentMessage(WUM_LC_GET_PROPERTIES, LCP_ROWNUM_WIDTH);
 	Rect rcWid = GetRect();
-	m_rgRowNumRect = rcWid;
-	m_rgRowNumRect.right = m_rgRowNumRect.left + nRowNumBarWidth;
+	m_rcSeqBarHead = rcWid;
+	m_rcSeqBarHead.right = m_rcSeqBarHead.left + nRowNumBarWidth;
 	Rect rcItem = rcWid;
 	rcItem.left += nRowNumBarWidth;
 	for (LONG nCol = nStartCol; nCol <= nEndCol && nCol < m_rgpHdi.size(); nCol++)
@@ -438,6 +438,11 @@ void HeaderCtrl::CalcCellRect()
 		m_rgpHdi[nCol]->rcPos = rcItem;
 		rcItem.left += rcItem.right - rcItem.left;
 	}
+}
+
+LCDrawItemInfo* HeaderCtrl::GetDrawItemInfo() const
+{
+	return m_pDrawItemInfo.get();
 }
 
 Cell* HeaderCtrl::GetCell( ULONG nCol )
@@ -699,12 +704,16 @@ LRESULT ListCtrl::OnSize( UINT uMsg,
 	rc.left += 1;
 	rc.right -= 1;
 	rc.top += 1;
+	if (!rc.IsValid())
+	{
+		rc.Empty();
+	}
 	m_pHeadCtrl->SetRect(rc);
 	CalcRow();
 	CalcCol();
 	CalcCellRect();
 	m_pHeadCtrl->CalcCellRect();
-	return 0;
+	return 1;
 }
 
 ULONG ListCtrl::AddColumn(const String& strName, 
@@ -797,9 +806,9 @@ BOOL ListCtrl::GetCellIndirect(const CellID& cellID,
 	return TRUE;
 }
 
-BOOL ListCtrl::GetCellID( POINT pt, std::pair<CellID, Rect>& cellID)
+BOOL ListCtrl::GetCellID( POINT pt, std::pair<CellID, Rect>& cellID) const
 {
-	for(std::map<CellID, Rect>::iterator it = m_rgRect.begin();
+	for(std::map<CellID, Rect>::const_iterator it = m_rgRect.begin();
 		it != m_rgRect.end(); ++it)
 	{
 		if (it->second.PtInRect(pt))
@@ -889,10 +898,11 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 		WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
 		return;
 	}
-	Cell* pCell = NULL;
+	LCDrawItemInfo* pDrawItemInfo = GetDrawItemInfo();
+	pDrawItemInfo->Clear();
+	pDrawItemInfo->m_hDC = hdc;
 	Rect rcCell;
 	DWORD dwState = WCS_NORMAL;
-	String strCellText;
 	ULONG nLayer = 0;
 	BOOL bRowExpanded = FALSE;
 	COLORREF clrText = 0;
@@ -902,13 +912,11 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 	ULONG nSeqBarWidth = GetRowNumBarWidth();
 	for (LONG nRow = m_nStartRow, nRowNum = 0; nRow <= m_nEndRow; nRow++, nRowNum++)
 	{
-		pCell = GetCell(0, 0);
-		if (pCell != NULL)
-		{
-			strCellText.Format(L"%d", nRow);
-			pCell->Draw(hdc, m_rgRowNumRect[nRowNum], 0, strCellText, WBTN_BKGND_MOUSE,
-				DT_VCENTER | DT_SINGLELINE | DT_CENTER);
-		}
+		pDrawItemInfo->m_nRow = nRow;
+		WFX_CONDITION(m_rgRowNumRect.size() > nRowNum);
+		pDrawItemInfo->m_prcItem = &m_rgRowNumRect[nRowNum];
+		pDrawItemInfo->m_dwState = 0;
+		OnDrawSeqBar(pDrawItemInfo);
 		nLayer = GetLayer(nRow);
 		nLayerOffset = (nLayer - 1) * 30;
 		clrText = GetColor(nLayer);
@@ -918,11 +926,6 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 		}
 		for (LONG nCol = m_nStartCol; nCol <= m_nEndCol; nCol++)
 		{
-			pCell = GetCell(nRow, nCol);
-			if (pCell == NULL)
-			{
-				continue;
-			}
 			CellID cellID(nRow, nCol);
 			dwState = WCS_NORMAL;
 			if (m_bHasSubItem && nCol == 0)
@@ -946,12 +949,101 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 			}
 			rcCell = GetCellRect(nRow, nCol);
 			rcCell.left += nLayerOffset;
-			strCellText.Format(L"Layer:%d ROW:%d COL:%d", nLayer, nRow, nCol);
-			pCell->Draw(hdc, rcCell, dwState, 
-				strCellText, WBTN_BKGND_MOUSE, DT_VCENTER | DT_SINGLELINE | DT_CENTER);
+			pDrawItemInfo->m_nCol = nCol;
+			pDrawItemInfo->m_prcItem = &rcCell;
+			pDrawItemInfo->m_dwState = dwState;
+			OnDrawItem(pDrawItemInfo);
 		}
 	}
 	WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
+}
+
+void ListCtrl::OnDrawItem( const LCDrawItemInfo* pDrawItemInfo )
+{
+	Cell* pCell = GetCell(pDrawItemInfo->m_nRow, pDrawItemInfo->m_nCol);
+	if (pCell == NULL)
+	{
+		return;
+	}
+	String strCellText;
+	strCellText.Format(L"ROW:%d COL:%d", 
+		pDrawItemInfo->m_nRow, pDrawItemInfo->m_nCol);
+	pCell->Draw(pDrawItemInfo->m_hDC, 
+		*(pDrawItemInfo->m_prcItem), 
+		pDrawItemInfo->m_dwState, strCellText, 
+		WBTN_BKGND_MOUSE, DT_VCENTER | DT_SINGLELINE | DT_CENTER);
+}
+
+void ListCtrl::OnDrawSeqBar( const LCDrawItemInfo* pDrawItemInfo )
+{
+	Cell* pCell = GetCell(0, 0);
+	if (pCell == NULL)
+	{
+		return;
+	}
+	String strCellText;
+	strCellText.Format(L"%d", pDrawItemInfo->m_nRow);
+	pCell->Draw(pDrawItemInfo->m_hDC, 
+		*(pDrawItemInfo->m_prcItem), pDrawItemInfo->m_dwState, 
+		strCellText, WBTN_BKGND_MOUSE,
+		DT_VCENTER | DT_SINGLELINE | DT_CENTER);
+}
+
+LRESULT ListCtrl::OnMsgSeqHeadDraw( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	OnDrawSeqHead((const LCDrawItemInfo*)wParam);
+	return 1;
+}
+
+LRESULT ListCtrl::OnMsgHeadDraw( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	OnDrawHeadCtrl((const LCDrawItemInfo*)wParam);
+	return 1;
+}
+
+LRESULT ListCtrl::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (GetScrollBar(SB_VERT) != NULL)
+	{
+		LONG nHeight = 0;
+		LONG nTotal = GetEndRow() + 1;
+		LONG nPos = 0;
+		for (LONG n = 0; n < nTotal; n++)
+		{
+			nPos += GetRowHeight(n);
+		}
+		GetScrollBar(SB_VERT)->SetPos(nPos);
+		BOOL bh;
+		GetScrollBar(SB_VERT)->OnSize(0, 0, 0, bh);
+	}
+	return 1;
+}
+
+void ListCtrl::OnDrawSeqHead( const LCDrawItemInfo* pDrawItemInfo )
+{
+	WFX_CONDITION(pDrawItemInfo != NULL);
+	Cell* pCell = GetCell(0, 0);
+	if (pCell == NULL)
+	{
+		return;
+	}
+	WFX_CONDITION(pDrawItemInfo->m_prcItem != NULL);
+	pCell->Draw(pDrawItemInfo->m_hDC, *(pDrawItemInfo->m_prcItem), 
+		pDrawItemInfo->m_dwState, L"SEQ", WBTN_BKGND_MOUSE, 0);
+}
+
+void ListCtrl::OnDrawHeadCtrl( const LCDrawItemInfo* pDrawItemInfo )
+{
+	WFX_CONDITION(pDrawItemInfo != NULL);
+	Cell* pCell = GetCell(0, 0);
+	if (pCell == NULL)
+	{
+		return;
+	}
+	WFX_CONDITION(pDrawItemInfo->m_prcItem != NULL);
+	WFX_CONDITION(pDrawItemInfo->m_pszText != NULL);
+	pCell->Draw(pDrawItemInfo->m_hDC, *(pDrawItemInfo->m_prcItem), pDrawItemInfo->m_dwState, 
+		pDrawItemInfo->m_pszText, WBTN_BKGND_MOUSE, pDrawItemInfo->m_dwFormat);
 }
 
 ULONG ListCtrl::GetTotalRows() const
@@ -971,7 +1063,7 @@ LRESULT ListCtrl::OnHeadSizeChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT ListCtrl::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if (CalcPos(SB_HORZ, (BOOL)wParam))
+	if (CalcPos(SB_HORZ))
 	{
 		CalcCellRect();
 		m_pHeadCtrl->CalcCellRect();
@@ -982,7 +1074,7 @@ LRESULT ListCtrl::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 LRESULT ListCtrl::OnVScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if (CalcPos(SB_VERT, (BOOL)wParam))
+	if (CalcPos(SB_VERT))
 	{
 		CalcCellRect();
 	}
@@ -1066,7 +1158,7 @@ LRESULT ListCtrl::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	if (wParam == LIST_TIMER_MOUSEMOVE)
 	{
 		KillWidTimer(LIST_TIMER_MOUSEMOVE);
-		Point pt = m_ptMouseMove;//(lParam);
+		Point pt = m_ptMouseMove;
 		std::pair<CellID, Rect> cellpt;
 		std::pair<Cell*, Rect> cell;
 		CellID cellMouseLeave;
@@ -1271,12 +1363,26 @@ Size ListCtrl::CalcVirtualSize()
 	return sz;
 }
 
+String ListCtrl::GetToolTip() const
+{
+	std::pair<CellID, Rect> cellpt;
+	GetCellID(m_ptMouseMove, cellpt);
+	if (!IsValidCellID(cellpt.first))
+	{
+		return L"";
+	}
+	String strCellText;
+	strCellText.Format(L"ROW:%d COL:%d", 
+		cellpt.first.m_nRow, cellpt.first.m_nCol);
+	return strCellText;
+}
+
 BOOL ListCtrl::CalcCol()
 {
 	ULONG nOldStartCol = m_nStartCol;
 	ULONG nOldEndCol = m_nEndCol;
 	m_nStartCol = m_nEndCol = -1;
-	Rect rcDraw = GetDrawRect();
+	Rect rcDraw = GetClientRect();
 	LONG nOffset = GetHOffset();
 	TRACE(L"nOffset = %d", nOffset);
 	ULONG nTotalCol = GetTotalColumns();
@@ -1317,7 +1423,7 @@ BOOL ListCtrl::CalcRow()
 	ULONG nOldStartRow = m_nStartRow;
 	ULONG nOldEndRow = m_nEndRow;
 	m_nStartRow = m_nEndRow = -1;
-	Rect rcDraw = GetDrawRect();
+	Rect rcDraw = GetClientRect();
 	LONG nOffset = GetVOffset();
 	TRACE(L"nOffset = %d", nOffset);
 	ULONG nTotalRow = GetTotalRows();
@@ -1343,7 +1449,7 @@ BOOL ListCtrl::CalcRow()
 		}
 	}
 
-	if (nSumHeight < nViewHeight)
+	if (nSumHeight <= nViewHeight)
 	{
 		m_nEndRow = nTotalRow - 1;
 	}
@@ -1354,6 +1460,12 @@ BOOL ListCtrl::CalcRow()
 
 void ListCtrl::CalcCellRect()
 {
+	WFX_CONDITION(m_nStartRow != -1);
+	WFX_CONDITION(m_nEndRow != -1);
+	WFX_CONDITION(m_nStartCol != -1);
+	WFX_CONDITION(m_nEndCol != -1);
+	WFX_CONDITION(m_nEndRow >= m_nStartRow);
+	WFX_CONDITION(m_nEndCol >= m_nEndCol);
 	m_rgRectFast.clear();
 	m_rgRect.clear();
 	m_rgRowNumRect.clear();
@@ -1361,7 +1473,7 @@ void ListCtrl::CalcCellRect()
 	ULONG nTotalCol = GetTotalColumns();
 	ULONG nSeqBarWidth = GetRowNumBarWidth();
 	ULONG nHeadHeight = GetHeadHeight();
-	Rect rcWid = GetDrawRect();
+	Rect rcWid = GetClientRect();
 	Rect rcCell = rcWid;
 	Rect rcRowNum = rcWid;
 	ULONG nWidth = 0;
@@ -1393,7 +1505,7 @@ void ListCtrl::CalcCellRect()
 	}
 }
 
-BOOL ListCtrl::CalcPos(int nBar, BOOL bFurther)
+BOOL ListCtrl::CalcPos(int nBar)
 {
 	if (nBar == SB_HORZ)
 	{
@@ -1410,4 +1522,9 @@ BOOL ListCtrl::Verify() const
 	ULONG nTotalRow = GetTotalRows();
 	ULONG nTotalCol = GetTotalColumns();
 	return nTotalRow > 0 && nTotalCol > 0;
+}
+
+LCDrawItemInfo* ListCtrl::GetDrawItemInfo() const
+{
+	return m_pHeadCtrl->GetDrawItemInfo();
 }

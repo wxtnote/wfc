@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -50,8 +50,6 @@ public:
 	LRESULT SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API AttrBase
 {
 public:
@@ -62,7 +60,6 @@ public:
 	virtual void SetTextColor(COLORREF clrText);
 	virtual void SetBkgnd(COLORREF clrBkgnd);
 	virtual void SetFrame(COLORREF clrFrame);
-	virtual void SetImage(const String& strImage);
 	virtual void SetState(WORD wState);
 	virtual void SetRect(const Rect& rect);
 	virtual String GetText() const;
@@ -70,7 +67,6 @@ public:
 	virtual COLORREF GetTextColor() const;
 	virtual COLORREF GetBkgnd() const;
 	virtual COLORREF GetFrame() const;
-	virtual PImage GetImage() const;
 	virtual WORD GetState() const;
 	virtual Rect GetRect() const;
 	virtual Widget* GetParent() const;
@@ -90,7 +86,6 @@ protected:
 	COLORREF m_clrBkgnd;
 	COLORREF m_clrFrame;
 	WORD m_wState;
-	PImage m_pImg;
 	Rect m_rect;
 	Widget* m_pParent;
 	Size m_szVirtualSize;
@@ -116,11 +111,6 @@ public:
 
 public:
 	WFX_BEGIN_MSG_MAP(Widget)
-		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
-		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
-		WFX_MESSAGE_HANDLER(WM_UPDATEUISTATE, OnStateChanged)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
@@ -145,8 +135,8 @@ public:
 	BOOL IsWidget() const;
 protected:
 	void MyShowWid(WORD wShow);
-	Rect GetDrawRect() const;
-	void SetDrawRect(const Rect& rc);
+	virtual Rect GetClientRect() const;
+	void SetClientRect(const Rect& rc);
 public:
 	virtual void SetParent(Widget* pParent);
 	// For Dispatcher
@@ -172,11 +162,9 @@ public:
 	void EnableScrollBar(UINT nBar, BOOL bEnable = TRUE);
 	UINT GetSBFlag() const;
 	void SetSBFlag(UINT uSBFlag);
-	void SetScrollInfo(int nBar, LPCSCROLLINFO lpsi, BOOL redraw);
-	void GetScrollInfo(int nBar, LPSCROLLINFO lpsi);
 	BOOL ScrollWid(int XAmount, int YAmount);
 public:
-	virtual BOOL InFunctionAera(const Point& pt);
+	virtual BOOL InClientAera(const Point& pt);
 protected:
 	virtual Rect GetScrollBarRect(int nBar);
 protected:
@@ -189,16 +177,6 @@ public:
 	BOOL KillWidTimer(UINT_PTR uIDEvent);
 
 public:
-	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnStateChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -223,7 +201,7 @@ public:
 	Dispatcher* m_pDispatch;
 private:
 	// Position
-	Rect m_rcDraw;
+	Rect m_rcClient;
 	BOOL m_bNC;
 	WORD m_wShow;
 	// Generation
@@ -231,10 +209,7 @@ private:
 	// Scrollbar
 	ScrollBar* m_pHScrollbar;
 	ScrollBar* m_pVScrollbar;
-
 	UINT m_uBarFlag;
-	// Timers need to be killed.
-	std::vector<UINT_PTR> m_rgTimer;
 
 	// Event ID
 	UINT m_nID;
@@ -250,17 +225,50 @@ public:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+public:
+	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
 typedef SharedPtr<UnitBase> PUnitBase;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ProcessBar : public Widget
+class WFX_API BarBase
 {
 public:
-	ProcessBar(int nBar = SB_HORZ);
-public:
+	BarBase(int nBar = SB_HORZ);
 public:
 	int GetBar() const;
 	void SetBar(int nBar);
+protected:
+	int m_nBar;
+};
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+class WFX_API WidCtrlBase : public Widget
+{
+public:
+	WFX_BEGIN_MSG_MAP(WidCtrlBase)
+		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_MESSAGE_HANDLER(WM_UPDATEUISTATE, OnStateChanged)
+		WFX_CHAIN_MSG_MAP(Widget)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnStateChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+};
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+class WFX_API ProcessBar : public WidCtrlBase, public BarBase
+{
+public:
+	ProcessBar(int nBar = SB_HORZ);
 public:
 	virtual void SetRange(LONG nMin, LONG nMax);
 	virtual LONG GetRange() const;
@@ -274,7 +282,6 @@ public:
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rc);
 protected:
-	int m_nBar;
 	LONG m_nMax;
 	LONG m_nMin;
 	LONG m_nPos;
@@ -286,7 +293,6 @@ class WFX_API Slider : public ProcessBar
 {
 public:
 	Slider(int nBar = SB_HORZ);
-	virtual ~Slider();
 public:
 	WFX_BEGIN_MSG_MAP(Slider)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
@@ -379,7 +385,7 @@ protected:
 };
 typedef SharedPtr<ScrollBar> PScrollBar;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ImageWid : public Widget
+class WFX_API ImageWid : public WidCtrlBase
 {
 public:
 	ImageWid();
@@ -394,7 +400,7 @@ public:
 		const String& strPush,
 		const String& strChecked);
 protected:
-	PImage GetImageFromState();
+	Gdiplus::Image* GetImageFromState();
 protected:
 	PImage m_pImgStatic;
 	PImage m_pImgMouse;
@@ -423,81 +429,53 @@ public:
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	BOOL m_bLButtonDown;
 	BOOL m_bChecked;
 	BOOL m_bCheckable;
 };
 typedef SharedPtr<Button> PButton;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API CheckBoxItem : public Button
-{
-public:
-	CheckBoxItem();
-	CheckBoxItem(const String& strChecked,
-		const String& strUnCheck);
-public:
-	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
-
-protected:
-	PImage GetImage() const;
-
-protected:
-	PImage m_pImageChecked;
-	PImage m_pImageUnCheck;
-};
-typedef SharedPtr<CheckBoxItem> PCheckBoxItem;
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ToolTip : public Button
-{
-
-};
-typedef SharedPtr<ToolTip> PToolTip;
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API CheckBox : public Widget
+class WFX_API CheckBox : public Button
 {
 public:
 	CheckBox();
 public:
 	WFX_BEGIN_MSG_MAP(CheckBox)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_CHAIN_MSG_MAP(Widget)
+		WFX_CHAIN_MSG_MAP(Button)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
+	Gdiplus::Image* GetItemImage() const;
+	Rect GetItemRect() const;
+protected:
 	ULONG m_lOffset;
-	PButton m_pItem;
+	PImage m_pImageChecked;
+	PImage m_pImageUnCheck;
+	Rect m_rcItem;
 };
 typedef SharedPtr<CheckBox> PCheckBox;
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API RadioButtonItem : public CheckBoxItem
-{
-public:
-	virtual void OnDraw(HDC hdc, const Rect& rc);
-};
-typedef SharedPtr<RadioButtonItem> PRadioButtonItem;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API RadioButton : public CheckBox
 {
 public:
 	RadioButton();
+protected:
+	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
 typedef SharedPtr<RadioButton> PRadioButton;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API Label : public Widget
+class WFX_API Label : public WidCtrlBase
 {
 protected:
 	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
 typedef SharedPtr<Label> PLabel;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API InPlaceWid : public Widget
+class WFX_API InPlaceWid : public WidCtrlBase
 {
 	friend class InPlaceWnd;
 public:
@@ -505,7 +483,7 @@ public:
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWid)
 		WFX_MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-		WFX_CHAIN_MSG_MAP(Widget)
+		WFX_CHAIN_MSG_MAP(WidCtrlBase)
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -648,7 +626,6 @@ protected:
 	WNDPROC m_OldWndProc;
 	BOOL m_bSubclassed;
 };
-
 typedef SharedPtr<Window> PWindow;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API WidgetWnd : public Window
@@ -664,7 +641,6 @@ public:
 protected:
 	virtual void OnInitialMessage(HWND hWnd);
 };
-
 typedef SharedPtr<WidgetWnd> PWidgetWnd;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceWnd : public WidgetWnd
@@ -773,7 +749,7 @@ struct TimerKey
 	bool operator==(const TimerKey& key) const;
 	bool operator!=(const TimerKey& key) const;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 struct TimerValue
 {
 	TimerValue()
@@ -790,9 +766,8 @@ struct TimerValue
 	TimerKey m_tk;
 	UINT_PTR m_nWidTimer;
 };
-
 typedef std::map<UINT_PTR, UINT_PTR> Timer2Timer;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class TimerTranslator
 {
 public:
@@ -810,9 +785,7 @@ protected:
 	std::map<UINT_PTR, TimerValue> m_WndToWid;
 	UINT_PTR m_nTimerBase;
 };
-
 typedef SharedPtr<TimerTranslator> PTimerTranslator;
-
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class Timer
 {
@@ -957,9 +930,7 @@ private:
 	static short s_nL;
 	static int   s_nAlpha;
 };
-
 typedef SharedPtr<Dispatcher> PDispatcher;
-
 typedef Dispatcher WfxDispatcher;
 
 END_NAMESPACE_WFX

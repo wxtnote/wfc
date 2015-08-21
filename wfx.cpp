@@ -1,5 +1,5 @@
 // This is a part of the Widget Foundation Classes.
-// Copyright (C) Grant Ward (grant.ward@gmail.com)
+// Copyright (C) Hirota Studio (www.hirotastudio.com)
 // All rights reserved.
 //
 // This source code is only intended as a supplement to the
@@ -184,6 +184,30 @@ BOOL Rect::PtInRect( POINT pt ) const
 {
 	return ::PtInRect((tagRECT*)this, pt);
 }
+
+BOOL Rect::IsValid() const
+{
+	return (left >= 0)
+		&& (top >= 0)
+		&& (right >= 0)
+		&& (bottom >= 0)
+		&& (right >= left)
+		&& (bottom >= top);
+}
+
+BOOL Rect::IsEmpty() const
+{
+	if (IsValid())
+	{
+		return (0 == left)
+			&& (0 == top)
+			&& (0 == right)
+			&& (0 == bottom);
+	}
+	// InValid Is Empty, of course
+	return TRUE;
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Size::Size()
 {

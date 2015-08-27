@@ -372,6 +372,7 @@ void Dispatcher::DrawGen( Widget* pWid, HDC hdc, const Rect& rcPaint)
 
 	WfxRender::RenderClip clip(hdc, rcItem);
 	pWid->OnDraw(hdc, rcPaint);
+	WfxRender::DrawFrame(hdc, rcItem, WBTN_BKGND_MOUSE);
 
 	std::vector<Widget*> rgpChildren;
 	pWid->GetChildren(rgpChildren);
@@ -635,37 +636,82 @@ LRESULT Dispatcher::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return lResult;
 }
 
-Widget* Dispatcher::GetWidPt( POINT pt )
+Widget* Dispatcher::GetWidPt( const Point& pt )
 {
-	Widget* pWid = NULL;
-	std::vector<Widget*> rgpWidInPt;
-	for (std::map<HWID, Widget*>::iterator it = m_Handle2Object.begin();
-		it != m_Handle2Object.end(); ++it)
+	//Widget* pWid = NULL;
+	//std::vector<Widget*> rgpWidInPt;
+	//for (std::map<HWID, Widget*>::iterator it = m_Handle2Object.begin();
+	//	it != m_Handle2Object.end(); ++it)
+	//{
+	//	WFX_CONDITION(it->second != NULL);
+	//	if (!it->second->IsShow())
+	//	{
+	//		continue;
+	//	}
+	//	Rect rcWid = it->second->GetRect();
+	//	if (rcWid.PtInRect(pt))
+	//	{
+	//		rgpWidInPt.push_back(it->second);
+	//	}
+	//}
+	//if (rgpWidInPt.size() > 0)
+	//{
+	//	///TRACE(L"%d", rgpWidInPt.size());
+	//	//WFX_CONDITION(rgpWidInPt.size() != 4);
+	//	if (rgpWidInPt.size() != 1)
+	//	{
+	//		pWid = GetWidPt(rgpWidInPt);
+	//	}
+	//	else
+	//	{
+	//		pWid = rgpWidInPt[0];
+	//	}
+	//}
+
+	//return pWid;
+	Widget* pWidget = NULL;
+	for (std::map<HWID, Widget*>::iterator it = m_h2oOrphan.begin();
+		it != m_h2oOrphan.end(); ++it)
 	{
 		WFX_CONDITION(it->second != NULL);
-		if (!it->second->IsShow())
+		pWidget = GetWidPt(it->second, pt);
+		if (pWidget != NULL)
 		{
-			continue;
-		}
-		Rect rcWid = it->second->GetRect();
-		if (rcWid.PtInRect(pt))
-		{
-			rgpWidInPt.push_back(it->second);
+			break;
 		}
 	}
-	if (rgpWidInPt.size() > 0)
-	{
-		if (rgpWidInPt.size() != 1)
-		{
-			pWid = GetWidPt(rgpWidInPt);
-		}
-		else
-		{
-			pWid = rgpWidInPt[0];
-		}
-	}
+	return pWidget;
+}
 
-	return pWid;
+Widget* Dispatcher::GetWidPt(Widget* pWidget, const Point& pt)
+{
+	WFX_CONDITION(pWidget != NULL);
+	Widget* pWigetFound = NULL;
+	if (pWidget->GetRect().PtInRect(pt))
+	{
+		if (!pWidget->HasChild())
+		{
+			return pWidget;
+		}
+		std::vector<Widget*> rgpChildren;
+		pWidget->GetChildren(rgpChildren);
+		for (std::vector<Widget*>::iterator it = 
+			rgpChildren.begin(); it != rgpChildren.end(); ++it)
+		{
+			WFX_CONDITION((*it) != NULL);
+			pWigetFound = GetWidPt((*it), pt);
+			if (pWigetFound != NULL)
+			{
+				return pWigetFound;
+			}
+		}
+		if (pWigetFound == NULL)
+		{
+			return pWidget;
+		}
+	}
+	
+	return NULL;
 }
 
 Widget* Dispatcher::GetWidPt(const std::vector<Widget*>& rgpWid)
@@ -947,7 +993,7 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 				pBar = new ScrollBar(SB_VERT);
 				pBar->SetRange(0, szVirtual.cy);
 				rcSB = pWid->GetScrollBarRect(SB_VERT);
-				pBar->Create(rcSB, this, pWid);
+				pBar->Create(rcSB, pWid);
 				pWid->SetScrollBar(SB_VERT, pBar);
 			}
 			pBar = pWid->GetScrollBar(SB_HORZ);
@@ -957,7 +1003,7 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 				pBar = new ScrollBar(SB_HORZ);
 				pBar->SetRange(0, szVirtual.cx);
 				rcSB = pWid->GetScrollBarRect(SB_HORZ);
-				pBar->Create(rcSB, this, pWid);
+				pBar->Create(rcSB, pWid);
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
 			pWid->SetSBFlag(WESB_BOTH);
@@ -983,7 +1029,7 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 				pBar = new ScrollBar(SB_HORZ);
 				pBar->SetRange(0, szVirtual.cx);
 				rcSB = pWid->GetScrollBarRect(SB_HORZ);
-				pBar->Create(rcSB, this, pWid);
+				pBar->Create(rcSB, pWid);
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
 			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_HORZ);
@@ -1007,7 +1053,7 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 				pBar = new ScrollBar(WESB_VERT);
 				pBar->SetRange(0, szVirtual.cy);
 				rcSB = pWid->GetScrollBarRect(WESB_VERT);
-				pBar->Create(rcSB, this, pWid);
+				pBar->Create(rcSB, pWid);
 				pWid->SetScrollBar(WESB_VERT, pBar);
 			}
 			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_VERT);

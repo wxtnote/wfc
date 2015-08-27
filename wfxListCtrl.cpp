@@ -690,7 +690,7 @@ LRESULT ListCtrl::OnCreate( UINT uMsg,
 						   BOOL& bHandled )
 {
 	Rect rc;
-	m_pHeadCtrl->Create(rc, m_pDispatch, this);
+	m_pHeadCtrl->Create(rc, this);
 	return 0;
 }
 
@@ -895,7 +895,7 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 	Rect rc = GetRect();
 	if (!Verify())
 	{
-		WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
+		WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, GetDispatcher());
 		return;
 	}
 	LCDrawItemInfo* pDrawItemInfo = GetDrawItemInfo();
@@ -955,7 +955,7 @@ void ListCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 			OnDrawItem(pDrawItemInfo);
 		}
 	}
-	WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, m_pDispatch);
+	WfxRender::DrawFrame(hdc, rc, WBTN_BKGND_MOUSE, GetDispatcher());
 }
 
 void ListCtrl::OnDrawItem( const LCDrawItemInfo* pDrawItemInfo )
@@ -1109,8 +1109,8 @@ LRESULT ListCtrl::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 		{
 			cellMouseLeave = m_cellMouseMove;
 			m_cellMouseMove = cellMouseMove;
-			TRACE(L"cellMouseLeave.m_nRow = %d, cellMouseLeave.m_nCol = %d", cellMouseLeave.m_nRow, cellMouseLeave.m_nCol);
-			TRACE(L"m_cellMouseMove.m_nRow = %d, m_cellMouseMove.m_nCol = %d", m_cellMouseMove.m_nRow, m_cellMouseMove.m_nCol);
+			//TRACE(L"cellMouseLeave.m_nRow = %d, cellMouseLeave.m_nCol = %d", cellMouseLeave.m_nRow, cellMouseLeave.m_nCol);
+			//TRACE(L"m_cellMouseMove.m_nRow = %d, m_cellMouseMove.m_nCol = %d", m_cellMouseMove.m_nRow, m_cellMouseMove.m_nCol);
 		}
 	}
 	if (GetCellIndirect(cellMouseLeave, cell))
@@ -1171,8 +1171,8 @@ LRESULT ListCtrl::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 			{
 				cellMouseLeave = m_cellMouseMove;
 				m_cellMouseMove = cellMouseMove;
-				TRACE(L"cellMouseLeave.m_nRow = %d, cellMouseLeave.m_nCol = %d", cellMouseLeave.m_nRow, cellMouseLeave.m_nCol);
-				TRACE(L"m_cellMouseMove.m_nRow = %d, m_cellMouseMove.m_nCol = %d", m_cellMouseMove.m_nRow, m_cellMouseMove.m_nCol);
+				//TRACE(L"cellMouseLeave.m_nRow = %d, cellMouseLeave.m_nCol = %d", cellMouseLeave.m_nRow, cellMouseLeave.m_nCol);
+				//TRACE(L"m_cellMouseMove.m_nRow = %d, m_cellMouseMove.m_nCol = %d", m_cellMouseMove.m_nRow, m_cellMouseMove.m_nCol);
 			}
 		}
 		if (GetCellIndirect(cellMouseLeave, cell))
@@ -1336,7 +1336,7 @@ LRESULT ListCtrl::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 	{
 	
 	}
-	TRACE(L"m_cellSelected.m_nRow=%d, m_cellSelected.m_nCol=%d", m_cellSelected.m_nRow, m_cellSelected.m_nCol);
+	//TRACE(L"m_cellSelected.m_nRow=%d, m_cellSelected.m_nCol=%d", m_cellSelected.m_nRow, m_cellSelected.m_nCol);
 	Cell* pCell = GetCell(cellID.first.m_nRow, cellID.first.m_nCol);
 	if (pCell != NULL)
 	{
@@ -1384,7 +1384,7 @@ BOOL ListCtrl::CalcCol()
 	m_nStartCol = m_nEndCol = -1;
 	Rect rcDraw = GetClientRect();
 	LONG nOffset = GetHOffset();
-	TRACE(L"nOffset = %d", nOffset);
+	//TRACE(L"nOffset = %d", nOffset);
 	ULONG nTotalCol = GetTotalColumns();
 	LONG nSumWidth = 0;
 	LONG nColWidth = 0;
@@ -1413,8 +1413,8 @@ BOOL ListCtrl::CalcCol()
 	{
 		m_nEndCol = nTotalCol - 1;
 	}
-	TRACE(L"m_nStartCol = %d", m_nStartCol);
-	TRACE(L"m_nEndCol = %d", m_nEndCol);
+	//TRACE(L"m_nStartCol = %d", m_nStartCol);
+	//TRACE(L"m_nEndCol = %d", m_nEndCol);
 	return (m_nStartCol != nOldStartCol || m_nEndCol != nOldEndCol);
 }
 
@@ -1425,7 +1425,7 @@ BOOL ListCtrl::CalcRow()
 	m_nStartRow = m_nEndRow = -1;
 	Rect rcDraw = GetClientRect();
 	LONG nOffset = GetVOffset();
-	TRACE(L"nOffset = %d", nOffset);
+	//TRACE(L"nOffset = %d", nOffset);
 	ULONG nTotalRow = GetTotalRows();
 	LONG nSumHeight = 0;
 	for (ULONG nRow = 0; nRow < nTotalRow; nRow++)
@@ -1453,8 +1453,8 @@ BOOL ListCtrl::CalcRow()
 	{
 		m_nEndRow = nTotalRow - 1;
 	}
-	TRACE(L"m_nStartRow = %d", m_nStartRow);
-	TRACE(L"m_nEndRow = %d", m_nEndRow);
+	//TRACE(L"m_nStartRow = %d", m_nStartRow);
+	//TRACE(L"m_nEndRow = %d", m_nEndRow);
 	return (m_nStartRow != nOldStartRow || m_nEndRow != nOldEndRow);
 }
 

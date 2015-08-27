@@ -271,7 +271,7 @@ void Slider::CalcHorzPos()
 		LONG nPos = WFX_ROUND((float)(nThumbPos - nThumbPosMin) / 
 			(float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin);
 		SetPos(nPos);
-		TRACE(L"nPos=%d", nPos);
+		//TRACE(L"nPos=%d", nPos);
 	}
 }
 
@@ -287,7 +287,7 @@ void Slider::CalcVertPos()
 		LONG nPos = WFX_ROUND((float)(nThumbPos - nThumbPosMin) / 
 			(float)(nThumbPosMax - nThumbPosMin) * (nMax - nMin) + nMin);
 		SetPos(nPos);
-		TRACE(L"nPos=%d", nPos);
+		//TRACE(L"nPos=%d", nPos);
 	}
 }
 

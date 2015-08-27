@@ -33,9 +33,9 @@ CommonWid::CommonWid()
 LRESULT CommonWid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Rect rc;
-	m_pBtnMax->Create(rc, m_pDispatch, this);
-	m_pBtnMin->Create(rc, m_pDispatch, this);
-	m_pBtnClose->Create(rc, m_pDispatch, this);
+	m_pBtnMax->Create(rc, this);
+	m_pBtnMin->Create(rc, this);
+	m_pBtnClose->Create(rc, this);
 	return 1;
 }
 
@@ -62,23 +62,23 @@ LRESULT CommonWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 LRESULT CommonWid::OnMax( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if (::IsMaximized(m_pDispatch->GetHwnd()))
+	if (::IsMaximized(GetDispatcher()->GetHwnd()))
 	{
 		m_pBtnMax->SetText(L"¿Ú");
-		return ::SendMessageW(m_pDispatch->GetHwnd(), WM_SYSCOMMAND, SC_RESTORE, 0);
+		return ::SendMessageW(GetDispatcher()->GetHwnd(), WM_SYSCOMMAND, SC_RESTORE, 0);
 	}
 	m_pBtnMax->SetText(L"ÂÀ");
-	return ::SendMessageW(m_pDispatch->GetHwnd(), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+	return ::SendMessageW(GetDispatcher()->GetHwnd(), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 }
 
 LRESULT CommonWid::OnMin( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return ::SendMessage(m_pDispatch->GetHwnd(), WM_SYSCOMMAND, SC_MINIMIZE, 0);
+	return ::SendMessage(GetDispatcher()->GetHwnd(), WM_SYSCOMMAND, SC_MINIMIZE, 0);
 }
 
 LRESULT CommonWid::OnClose( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return ::SendMessage(m_pDispatch->GetHwnd(), WM_CLOSE, 0, 0);
+	return ::SendMessage(GetDispatcher()->GetHwnd(), WM_CLOSE, 0, 0);
 }
 
 BOOL CommonWid::IsCaption( const Point& pt )
@@ -122,7 +122,7 @@ LRESULT CommonWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	styleValue &= ~WS_CAPTION;
 	::SetWindowLongW(*this, GWL_STYLE, styleValue | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	Rect rc;
-	m_pRoot->Create(rc, m_pDispatch.get());
+	m_pRoot->Create(rc, NULL, GetDispatcher());
 	SendWidMessage(WUM_WIDROOT_CREATE);
 	return 1;
 }
@@ -168,7 +168,7 @@ BOOL CommonWnd::Create( const String& strName, const Rect& rc, HWND hParent /*= 
 
 LPCWSTR CommonWnd::GetWindowClassName() const
 {
-	return L"WidgetFoundationClass";
+	return L"WidgetFoundationClasses(WFC)";
 }
 
 UINT CommonWnd::GetClassStyle() const

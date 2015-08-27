@@ -293,3 +293,22 @@ void Point::operator=( LPARAM lParam )
 	x = GET_X_LPARAM(lParam);
 	y = GET_Y_LPARAM(lParam);
 }
+
+BOOL Point::IsEmpty() const
+{
+	return (x <= 0) || (y <= 0);
+}
+
+Point::operator LPARAM()
+{
+	return MAKELPARAM(x, y);
+}
+
+SimpleHashTable::SimpleHashTable()
+{
+	m_pTable = new LONG*[30000];
+	for (LONG i = 0; i < 30000; i++)
+	{
+
+	}
+}

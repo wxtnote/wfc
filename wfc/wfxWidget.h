@@ -118,8 +118,8 @@ public:
 		WFX_MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
 	WFX_END_MSG_MAP()
 public:
-	BOOL Create(const Rect& rc, Dispatcher* pDispatch,
-		Widget* pParent = NULL, BOOL bNC = FALSE);
+	BOOL Create(const Rect& rc, Widget* pParent = NULL, 
+		Dispatcher* pDispatch = NULL, BOOL bNC = FALSE);
 
 	// Position
 public:
@@ -138,7 +138,7 @@ protected:
 	virtual Rect GetClientRect() const;
 	void SetClientRect(const Rect& rc);
 public:
-	virtual void SetParent(Widget* pParent);
+	void SetParent(Widget* pParent);
 	// For Dispatcher
 protected:
 	void SetMyParent(Widget* pParent);
@@ -193,8 +193,11 @@ public:
 public:
 	UINT GetID() const;
 	void SetID(UINT nID);
+	inline Dispatcher* GetDispatcher() const;
 protected:
 	virtual Size CalcVirtualSize();
+private:
+	Dispatcher* SearchDispather() const;
 	// Identifier
 public:
 	HWID m_hWid;
@@ -210,7 +213,6 @@ private:
 	ScrollBar* m_pHScrollbar;
 	ScrollBar* m_pVScrollbar;
 	UINT m_uBarFlag;
-
 	// Event ID
 	UINT m_nID;
 };
@@ -518,6 +520,10 @@ public:
 	BOOL IsReadonly() const;
 	BOOL IsPassword() const;
 protected:
+	String GetShowText() const;
+public:
+	virtual String GetToolTip() const;
+protected:
 	virtual BOOL Initial();
 	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
@@ -638,6 +644,7 @@ public:
 public:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
+	Dispatcher* GetDispatcher() const;
 protected:
 	virtual void OnInitialMessage(HWND hWnd);
 };
@@ -715,6 +722,7 @@ public:
 protected:
 	Point m_pLButtonDown;
 	PListCtrl m_pListCtrl;
+	Size m_szComboSize;
 };
 
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
@@ -879,7 +887,8 @@ public:
 	wfx_msg LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
-	Widget* GetWidPt(POINT pt);
+	Widget* GetWidPt(const Point& pt);
+	Widget* GetWidPt(Widget* pWidget, const Point& pt);
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
 	Widget* FromHwid(HWID hWid) const;
 	void SetCapture(Widget* pWid);

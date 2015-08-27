@@ -383,16 +383,22 @@ WidgetWnd::WidgetWnd()
 
 BOOL WidgetWnd::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
-	WFX_CONDITION(m_pDispatch->GetHwnd() != NULL);
-	WFX_CONDITION(::IsWindow(m_pDispatch->GetHwnd()));
-	m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+	WFX_CONDITION(GetDispatcher()->GetHwnd() != NULL);
+	WFX_CONDITION(::IsWindow(GetDispatcher()->GetHwnd()));
+	GetDispatcher()->HandleMessage(uMsg, wParam, lParam);
 	lResult = ::CallWindowProcW(m_OldWndProc, m_hWnd, uMsg, wParam, lParam);
 	return TRUE;
 }
 void WidgetWnd::OnInitialMessage( HWND hWnd )
 {
-	m_pDispatch->SetHwnd(hWnd);
+	GetDispatcher()->SetHwnd(hWnd);
 }
+
+Dispatcher* WidgetWnd::GetDispatcher() const
+{
+	return m_pDispatch.get();
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 InPlaceWnd::InPlaceWnd()
 {
@@ -407,7 +413,7 @@ BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
 	if (m_hWnd != NULL)
 	{
 		::SetFocus(m_hWnd);
-		m_pDispatch->SetHwnd(m_hWnd);
+		GetDispatcher()->SetHwnd(m_hWnd);
 	}
 	return FALSE;
 }

@@ -269,7 +269,7 @@ HFONT WfxRender::GetFontObject()
 		LOGFONTW lf = {0};
 		wsprintfW(lf.lfFaceName, L"%s", WID_FONT_STATIC);
 		lf.lfWeight = FW_NORMAL;
-		lf.lfHeight = 12;
+		lf.lfHeight = WID_FSIZE_STATIC;
 		lf.lfCharSet = DEFAULT_CHARSET;
 		s_hFont = ::CreateFontIndirectW(&lf);
 	}

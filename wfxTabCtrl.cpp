@@ -153,7 +153,7 @@ LRESULT TabCtrl::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	Rect rcItem;
 	for (ULONG nTab = 0; nTab < nItems; nTab++)
 	{
-		m_rgpTabs[nTab]->m_pWid->Create(rcItem, m_pDispatch, this);
+		m_rgpTabs[nTab]->m_pWid->Create(rcItem, this);
 	}
 	return 1;
 }

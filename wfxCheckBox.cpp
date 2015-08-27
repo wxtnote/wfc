@@ -37,8 +37,8 @@ LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
 void CheckBox::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, m_pDispatch);
-	WfxRender::DrawCheckBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), m_pDispatch);
+	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, GetDispatcher());
+	WfxRender::DrawCheckBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), GetDispatcher());
 }
 
 

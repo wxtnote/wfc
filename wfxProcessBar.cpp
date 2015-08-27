@@ -64,6 +64,7 @@ void ProcessBar::SetPos( LONG nPos )
 	{
 		InvalidWid();
 	}
+	SendParentMessage(WUM_CMN_SETPOS, (WPARAM)GetID(), (LPARAM)nPos);
 }
 
 LONG ProcessBar::GetPos() const
@@ -83,5 +84,5 @@ void ProcessBar::Reset()
 
 void ProcessBar::OnDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawProcessBar(hdc, GetRect(), GetState(), m_nMax, m_nPos, m_pDispatch);
+	WfxRender::DrawProcessBar(hdc, GetRect(), GetState(), m_nMax, m_nPos, GetDispatcher());
 }

@@ -33,15 +33,15 @@ void ComboWnd::OnInPlaceWindowKillFocus()
 HWND ComboWnd::CreateInPlaceWindow()
 {
 	WFX_CONDITION(m_pOwner != NULL);
-	WFX_CONDITION(m_pOwner->m_pDispatch != NULL);
-	Size szCombo = m_pOwner->SendWidMessage(WUM_COMBO_GET_SIZE);
+	WFX_CONDITION(m_pOwner->GetDispatcher() != NULL);
+	m_szComboSize = m_pOwner->SendWidMessage(WUM_COMBO_GET_SIZE);
 	Rect rcWid = m_pOwner->GetRect();
 	Rect rc = rcWid;
-	rc.right = rc.left + szCombo.cx;
+	rc.right = rc.left + m_szComboSize.cx;
 	rc.top = rc.bottom;
-	rc.bottom = rc.top + szCombo.cy;
-	MapWindowRect(m_pOwner->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);
-	Create(m_pOwner->m_pDispatch->GetHwnd(), NULL, WS_POPUP | WS_BORDER, WS_EX_TOOLWINDOW, rc);
+	rc.bottom = rc.top + m_szComboSize.cy;
+	MapWindowRect(m_pOwner->GetDispatcher()->GetHwnd(), HWND_DESKTOP, &rc);
+	Create(m_pOwner->GetDispatcher()->GetHwnd(), NULL, WS_POPUP | WS_BORDER, WS_EX_TOOLWINDOW, rc);
 	HWND hWndParent = m_hWnd;
 	while( ::GetParent(hWndParent) != NULL ) hWndParent = ::GetParent(hWndParent);
 	::ShowWindow(m_hWnd, SW_SHOW);
@@ -59,12 +59,12 @@ LRESULT ComboWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 {
 	Rect rc;
 	LONG nItems = m_pOwner->SendWidMessage(WUM_COMBO_GET_CNT);
-	m_pListCtrl->Create(rc, m_pDispatch.get());
+	m_pListCtrl->Create(rc, NULL, GetDispatcher());
 	for (int i = 0; i < 1; i++)
 	{
 		String strCol;
 		strCol.Format(L"LIE%d", i);
-		m_pListCtrl->AddColumn(strCol, 100, 0, 0);
+		m_pListCtrl->AddColumn(strCol, m_szComboSize.cx - 10, 0, 0);
 	}
 	for (int i = 0; i < nItems; i++)
 	{
@@ -87,12 +87,12 @@ LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 LRESULT ComboWnd::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	m_pLButtonDown = lParam;
-	return m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+	return GetDispatcher()->HandleMessage(uMsg, wParam, lParam);
 }
 
 LRESULT ComboWnd::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	LRESULT lResult = m_pDispatch->HandleMessage(uMsg, wParam, lParam);
+	LRESULT lResult = GetDispatcher()->HandleMessage(uMsg, wParam, lParam);
 	if (m_pListCtrl->InClientAera(lParam) && m_pListCtrl->InClientAera(m_pLButtonDown))
 	{
 		SendWidMessage(WM_KILLFOCUS);
@@ -112,7 +112,7 @@ ComboBox::ComboBox()
 LRESULT ComboBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Rect rc;
-	m_pTextBox->Create(rc, m_pDispatch, this);
+	m_pTextBox->Create(rc, this);
 	return 1;
 }
 
@@ -140,7 +140,7 @@ void ComboBox::OnDraw( HDC hdc, const Rect& rcPaint )
 
 LRESULT ComboBox::OnGetComboSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return Size(100, 400);
+	return Size(GetRect().GetWidth(), 400);
 }
 
 LRESULT ComboBox::OnGetCount( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )

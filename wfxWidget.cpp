@@ -165,9 +165,9 @@ Widget::Widget(void)
 
 Widget::~Widget(void)
 {
-	if (m_pDispatch != NULL)
+	if (GetDispatcher() != NULL)
 	{
-		m_pDispatch->Destroy(m_hWid);
+		GetDispatcher()->Destroy(m_hWid);
 	}
 	TDEL(m_pVScrollbar);
 	TDEL(m_pHScrollbar);
@@ -176,7 +176,7 @@ Widget::~Widget(void)
 void Widget::SetRect( const Rect& rc )
 {
 	AttrBase::SetRect(rc);
-	m_pDispatch->SetWidRect(this, rc);
+	GetDispatcher()->SetWidRect(this, rc);
 }
 
 Rect Widget::GetParentRect() const
@@ -188,16 +188,21 @@ Rect Widget::GetParentRect() const
 	}
 	else
 	{
-		WFX_CONDITION(m_pDispatch != NULL);
-		WFX_CONDITION(::IsWindow(m_pDispatch->GetHwnd()));
-		::GetClientRect(m_pDispatch->GetHwnd(), &rcParent);
+		WFX_CONDITION(GetDispatcher() != NULL);
+		WFX_CONDITION(::IsWindow(GetDispatcher()->GetHwnd()));
+		::GetClientRect(GetDispatcher()->GetHwnd(), &rcParent);
 	}
 	return rcParent;
 }
 
-BOOL Widget::Create( const Rect& rc, Dispatcher* pDispatch, 
-					Widget* pParent /*= NULL*/, BOOL bNC /*= FALSE*/ )
+BOOL Widget::Create( const Rect& rc, Widget* pParent /*= NULL*/, 
+					Dispatcher* pDispatch /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
+	WFX_CONDITION(pDispatch != NULL || pParent != NULL);
+	if (pDispatch == NULL)
+	{
+		pDispatch = pParent->SearchDispather();
+	}
 	WFX_CONDITION(pDispatch != NULL);
 	m_pDispatch = pDispatch;
 	m_pDispatch->Create(this);
@@ -235,7 +240,7 @@ BOOL Widget::HasChild() const
 
 void Widget::InvalidWid()
 {
-	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(GetDispatcher() != NULL);
 	if (!IsShow())
 	{
 		return;
@@ -253,16 +258,16 @@ void Widget::InvalidWid()
 			return;
 		}
 	}
-	m_pDispatch->Invalidate(GetRect());
+	GetDispatcher()->Invalidate(GetRect());
 }
 
 void Widget::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	Rect rcWid = GetRect();
 	Rect rc = rcWid;
-	WfxRender::DrawSolidRect(hdc, rc, WID_BKGND_STATIC, m_pDispatch);
+	WfxRender::DrawSolidRect(hdc, rc, WID_BKGND_STATIC, GetDispatcher());
 	WfxRender::DrawText(hdc, rc, GetText(), RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
-	WfxRender::DrawFrame(hdc, rcWid, WBTN_BKGND_MOUSE, m_pDispatch);
+	WfxRender::DrawFrame(hdc, rcWid, WBTN_BKGND_MOUSE, GetDispatcher());
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -304,8 +309,8 @@ void Widget::SetMyParent( Widget* pParent )
 
 void Widget::EnableScrollBar( UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	m_pDispatch->EnableScrollBar(this, uBarFlag, bEnable);
+	WFX_CONDITION(GetDispatcher() != NULL);
+	GetDispatcher()->EnableScrollBar(this, uBarFlag, bEnable);
 }
 
 void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
@@ -334,8 +339,8 @@ void Widget::SetState( WORD wState )
 
 void Widget::ShowWid( WORD wShow )
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	m_pDispatch->ShowWid(this, wShow);
+	WFX_CONDITION(GetDispatcher() != NULL);
+	GetDispatcher()->ShowWid(this, wShow);
 	if (IsShow())
 	{
 		InvalidWid();
@@ -350,14 +355,14 @@ BOOL Widget::PostWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*=
 
 UINT_PTR Widget::SetWidTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc /*= NULL*/)
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	return m_pDispatch->SetWidTimer(this, nIDEvent, uElapse, lpTimerFunc);
+	WFX_CONDITION(GetDispatcher() != NULL);
+	return GetDispatcher()->SetWidTimer(this, nIDEvent, uElapse, lpTimerFunc);
 }
 
 BOOL Widget::KillWidTimer( UINT_PTR uIDEvent )
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	return m_pDispatch->KillWidTimer(this, uIDEvent);
+	WFX_CONDITION(GetDispatcher() != NULL);
+	return GetDispatcher()->KillWidTimer(this, uIDEvent);
 }
 
 BOOL Widget::IsShow() const
@@ -368,7 +373,7 @@ BOOL Widget::IsShow() const
 void Widget::MyShowWid( WORD wShow )
 {
 	m_wShow = wShow;
-	PostWidMessage(WM_SHOWWINDOW, m_wShow);
+	SendWidMessage(WM_SHOWWINDOW, m_wShow);
 }
 
 Widget::operator HWID() const
@@ -378,14 +383,14 @@ Widget::operator HWID() const
 
 void Widget::SetCapture()
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	m_pDispatch->SetCapture(this);
+	WFX_CONDITION(GetDispatcher() != NULL);
+	GetDispatcher()->SetCapture(this);
 }
 
 void Widget::ReleaseCapture()
 {
-	WFX_CONDITION(m_pDispatch != NULL);
-	m_pDispatch->ReleaseCapture();
+	WFX_CONDITION(GetDispatcher() != NULL);
+	GetDispatcher()->ReleaseCapture();
 }
 
 BOOL Widget::IsWidget() const
@@ -394,12 +399,12 @@ BOOL Widget::IsWidget() const
 	{
 		return FALSE;
 	}
-	return m_pDispatch->IsWidget(this);
+	return GetDispatcher()->IsWidget(this);
 }
 
 BOOL Widget::IsCaptured() const
 {
-	return m_pDispatch->IsCaptured(this);
+	return GetDispatcher()->IsCaptured(this);
 }
 
 ScrollBar* Widget::GetScrollBar( int nBar ) const
@@ -565,6 +570,32 @@ Size Widget::CalcVirtualSize()
 {
 	return Size();
 }
+
+Dispatcher* Widget::GetDispatcher() const
+{
+	return m_pDispatch;
+}
+
+Dispatcher* Widget::SearchDispather() const
+{
+	if (m_pDispatch != NULL)
+	{
+		return m_pDispatch;
+	}
+	Widget* pParent = GetParent();
+	Dispatcher* pDispatch = NULL;
+	while(pParent != NULL)
+	{
+		pDispatch = pParent->GetDispatcher();
+		if (pDispatch != NULL)
+		{
+			return pDispatch;
+		}
+		pParent = pParent->GetParent();
+	}
+	return pDispatch;
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 UnitBase::UnitBase(Widget* pWid /*= NULL*/)
 : AttrBase(pWid)
@@ -586,7 +617,8 @@ LRESULT UnitBase::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lP
 
 void UnitBase::OnDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawSolidRect(hdc, GetRect(), RGB(255, 0, 0));
+	WfxRender::DrawSolidRect(hdc, GetRect(), WBTN_BKGND_MOUSE);
+	WfxRender::DrawFrame(hdc, GetRect(), RGB(30, 30, 30));
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 LRESULT WidCtrlBase::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )

@@ -19,11 +19,13 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 {
 	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner);
 	WFX_CONDITION(pTextBox != NULL);
-	WFX_CONDITION(pTextBox->m_pDispatch != NULL);
+	WFX_CONDITION(pTextBox->GetDispatcher() != NULL);
+	Rect rcParent = pTextBox->GetParentRect();
 	Rect rcWid = pTextBox->GetRect();
+	rcWid.bottom = min(rcParent.bottom, rcWid.bottom);
+	rcWid.right = min(rcParent.right , rcWid.right);
 	Rect rc = rcWid;
-	::InflateRect(&rc, -1, -3);
-	Create(m_pOwner->m_pDispatch->GetHwnd(),
+	Create(m_pOwner->GetDispatcher()->GetHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);
 	SetFont(WfxRender::GetFontObject());
 	SetText(m_pOwner->GetText());
@@ -34,9 +36,8 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	Edit_SetReadOnly(m_hWnd, FALSE);
 	if (pTextBox->GetMode() & WID_TBM_PW)
 	{
-
+		Edit_SetPasswordChar(m_hWnd,L'*');
 	}
-	//Edit_SetPasswordChar(m_hWnd,7);
 	::ShowWindow(m_hWnd, SW_SHOWNOACTIVATE);
 	::SetFocus(m_hWnd);
 	return m_hWnd;
@@ -104,9 +105,29 @@ BOOL TextBox::Initial()
 	return FALSE;
 }
 
+String TextBox::GetShowText() const
+{
+	String str;
+	if (GetMode() & WID_TBM_PW)
+	{
+		str.assign(GetText().length(), L'*');
+	}
+	else
+	{
+		return GetText();
+	}
+	return str;
+}
+
 void TextBox::OnDraw(HDC hdc, const Rect& rcPaint)
 {
-	WfxRender::DrawTextBox(hdc, GetText(), GetRect(), GetState(), GetMode(), m_pDispatch);
+	String str = GetShowText();
+	WfxRender::DrawTextBox(hdc, str, GetRect(), GetState(), GetMode(), GetDispatcher());
+}
+
+String TextBox::GetToolTip() const
+{
+	return GetShowText();
 }
 
 LRESULT TextBox::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )

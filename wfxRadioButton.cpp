@@ -22,6 +22,6 @@ RadioButton::RadioButton()
 
 void RadioButton::OnDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, m_pDispatch);
-	WfxRender::DrawRadioBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), m_pDispatch);
+	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, GetDispatcher());
+	WfxRender::DrawRadioBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), GetDispatcher());
 }

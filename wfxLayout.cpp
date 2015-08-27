@@ -68,7 +68,7 @@ LRESULT Grid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled 
 	for (ULONG i = 0; i < nItems; i++)
 	{
 		WFX_CONDITION(m_rgWidLayout[i].first != NULL);
-		m_rgWidLayout[i].first->Create(rc, m_pDispatch, this);
+		m_rgWidLayout[i].first->Create(rc, this);
 	}
 	return 1;
 }
@@ -101,7 +101,7 @@ LRESULT LayoutDispatch::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	if (m_pRoot != NULL)
 	{
 		Rect rc;
-		m_pRoot->Create(rc, this);
+		m_pRoot->Create(rc, NULL, this);
 	}
 	return 1;
 }

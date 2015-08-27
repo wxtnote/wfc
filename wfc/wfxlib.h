@@ -17,3 +17,4 @@
 #include "wfxlayout.h"
 #include "wfxtabctrl.h"
 #include "wfxcmnwnd.h"
+#include "wfxPane.h"

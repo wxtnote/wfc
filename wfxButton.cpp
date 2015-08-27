@@ -28,7 +28,7 @@ void Button::OnDraw( HDC hdc, const Rect& rcPaint )
 	if (pImage == NULL)
 	{
 		Rect rc = GetRect();
-		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), m_pDispatch);
+		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), GetDispatcher());
 	}
 }
 

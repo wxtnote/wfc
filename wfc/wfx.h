@@ -148,7 +148,9 @@ public:
 	Point(LPARAM lParam);
 	void operator=(LPARAM lParam);
 	void Empty();
+	BOOL IsEmpty() const;
 	operator LPPOINT();
+	operator LPARAM();
 };
 
 END_NAMESPACE_WFX
@@ -188,6 +190,8 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 
 #define SIZE_SCROLLBAR 11
 
+#define SIZE_SPLITBAR 5
+
 #define MIN_SCROLLBAR_THUMB 20
 
 #define WESB_NONE	0x0000
@@ -223,10 +227,10 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_FONT_PUSH		L"свт╡"
 #define WID_FONT_CHECKED	L"свт╡"
 
-#define WID_FSIZE_STATIC	10
-#define WID_FSIZE_MOUSE		10
-#define WID_FSIZE_PUSH		10
-#define WID_FSIZE_CHECKED	10
+#define WID_FSIZE_STATIC	18
+#define WID_FSIZE_MOUSE		18
+#define WID_FSIZE_PUSH		18
+#define WID_FSIZE_CHECKED	18
 
 #define WBTN_BKGND_STATIC	RGB(0, 0, 0)
 #define WBTN_BKGND_MOUSE	RGB(77, 137, 193)
@@ -292,6 +296,7 @@ enum Wfx_Msg
 	WUM_GET_VIRTUAL_SIZE,
 	WUM_GET_VISUAL_SIZE,
 	WUM_SB_OFFSET,
+	WUM_CMN_SETPOS,
 	WUM_LC_HITCOL,
 	WUM_LC_HEADSIZE,
 	WUM_LC_GET_PROPERTIES,
@@ -306,6 +311,8 @@ enum Wfx_Msg
 	WUM_COMBO_GET_ITEM_HEIGHT,
 	WUM_COMBO_GET_SEL,
 	WUM_COMBO_SET_SEL,
+	WUM_PANEITEM_RESIZE,
+	WUM_PANEITEM_POS,
 	WUM_END
 };
 
@@ -394,6 +401,17 @@ enum Wid_SysButtonID
 	WID_BTNID_MAX,
 	WID_BTNID_MIN,
 	WID_BTNID_CLOSE
+};
+
+class SimpleHashTable
+{
+public:
+	SimpleHashTable();
+public:
+	LONG AddItem(LONG nKey, LONG nValue);
+	LONG GetValue(LONG nKey);
+private:
+	LONG** m_pTable;
 };
 
 END_NAMESPACE_WFX

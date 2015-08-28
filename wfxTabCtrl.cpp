@@ -11,7 +11,7 @@
 
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxtabctrl.h"
+#include "wfxContainer.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -23,16 +23,16 @@ TabItem::TabItem( const ULONG nTabID, const String& strLabel,
 , m_bVisible(TRUE)
 , m_pWid(pWid)
 {
-	SetText(strLabel);
+	setText(strLabel);
 }
 
 void TabItem::Draw( HDC hdc, const Rect& rcPaint, BOOL bSelected /*= FALSE*/ )
 {
 	COLORREF clr = bSelected? WBTN_BKGND_MOUSE : WBTN_BKGND_STATIC;
-	WfxRender::DrawSolidRect(hdc, GetRect(), clr);
-	WfxRender::DrawText(hdc, GetRect(), GetText(), 
+	WfxRender::drawSolidRect(hdc, getRect(), clr);
+	WfxRender::drawText(hdc, getRect(), getText(), 
 		WID_TEXT_STATIC, DT_VCENTER | DT_SINGLELINE | DT_CENTER);
-	WfxRender::DrawFrame(hdc ,GetRect(), WBTN_BKGND_MOUSE);
+	WfxRender::drawFrame(hdc ,getRect(), WBTN_BKGND_MOUSE);
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TabCtrl::TabCtrl()
@@ -45,28 +45,28 @@ TabCtrl::TabCtrl()
 
 }
 
-void TabCtrl::SetTabHeight( ULONG nTabHeight )
+void TabCtrl::setTabHeight( ULONG nTabHeight )
 {
 	m_nTabHeight = nTabHeight;
 }
 
-ULONG TabCtrl::GetTabHeight() const
+ULONG TabCtrl::getTabHeight() const
 {
 	return m_nTabHeight;
 }
 
-Rect TabCtrl::GetTabRect() const
+Rect TabCtrl::getTabRect() const
 {
-	Rect rcWid = GetRect();
+	Rect rcWid = getRect();
 	return rcWid;
 }
 
-ULONG TabCtrl::AddTab( Widget* pTabWid, const String& strTabLabel )
+ULONG TabCtrl::addTab( Widget* pTabWid, const String& strTabLabel )
 {
-	return InsertTab(pTabWid, strTabLabel, m_rgpTabs.size());
+	return insertTab(pTabWid, strTabLabel, m_rgpTabs.size());
 }
 
-ULONG TabCtrl::InsertTab( Widget* pTabWid, 
+ULONG TabCtrl::insertTab( Widget* pTabWid, 
 						 const String& strTabLabel, ULONG nInsertAt )
 {
 	WFX_CONDITION(pTabWid != NULL);
@@ -74,113 +74,116 @@ ULONG TabCtrl::InsertTab( Widget* pTabWid,
 		PTabItem(new TabItem(m_nNextTabID, strTabLabel, pTabWid, this)));
 	m_nCurrentTab = m_nNextTabID;
 	m_nNextTabID++;
+	addItem(pTabWid);
 	return m_rgpTabs.size();
 }
 
-ULONG TabCtrl::RemoveTab( ULONG nTab, BOOL bRecalcLayout /*= TRUE*/ )
+ULONG TabCtrl::removeTab( ULONG nTab, BOOL brecalcLayout /*= TRUE*/ )
 {
 	WFX_CONDITION(nTab < m_rgpTabs.size());
 	if (nTab < m_rgpTabs.size())
 	{
+		removeItem(m_rgpTabs[nTab]->m_pWid);
 		m_rgpTabs.erase(m_rgpTabs.begin() + nTab);
 	}
 	return m_rgpTabs.size();
 }
 
-void TabCtrl::RemoveAllTabs()
+void TabCtrl::removeAllTabs()
 {
 	m_rgpTabs.clear();
+	removeAll();
 	m_nNextTabID = 0;
 }
 
-ULONG TabCtrl::GetVisibleTabCount() const
+ULONG TabCtrl::getVisibleTabCount() const
 {
-	Rect rcWid = GetRect();
-	return rcWid.GetWidth();
+	Rect rcWid = getRect();
+	return rcWid.getWidth();
 }
 
-BOOL TabCtrl::ShowTab( ULONG nTab, BOOL bShow /*= TRUE*/, 
-					  BOOL bRecalcLayout /*= TRUE*/, BOOL bActivate /*= TRUE*/ )
+BOOL TabCtrl::showTab( ULONG nTab, BOOL bShow /*= TRUE*/, 
+					  BOOL brecalcLayout /*= TRUE*/, BOOL bActivate /*= TRUE*/ )
 {
 	WFX_CONDITION(nTab < m_rgpTabs.size());
-	if (IsValidTab(m_nCurrentTab))
+	if (isValidTab(m_nCurrentTab))
 	{
 		Rect rcOldTab;
-		m_rgpTabs[m_nCurrentTab]->m_pWid->SetRect(rcOldTab);
-		m_rgpTabs[m_nCurrentTab]->m_pWid->ShowWid(SW_HIDE);
+		m_rgpTabs[m_nCurrentTab]->m_pWid->setRect(rcOldTab);
+		m_rgpTabs[m_nCurrentTab]->m_pWid->showWid(SW_HIDE);
 	}
 	m_nCurrentTab = nTab;
-	m_rgpTabs[m_nCurrentTab]->m_pWid->ShowWid(SW_SHOW);
-	m_rgpTabs[m_nCurrentTab]->m_pWid->SetRect(m_rcActivate);
-	RecalcLayout();
-	InvalidWid();
-	m_rgpTabs[m_nCurrentTab]->m_pWid->InvalidWid();
+	m_rgpTabs[m_nCurrentTab]->m_pWid->showWid(SW_SHOW);
+	m_rgpTabs[m_nCurrentTab]->m_pWid->setRect(m_rcActivate);
+	recalcLayout();
+	invalidWid();
+	m_rgpTabs[m_nCurrentTab]->m_pWid->invalidWid();
 	return FALSE;
 }
 
-ULONG TabCtrl::GetTabCount() const
+ULONG TabCtrl::getTabCount() const
 {
 	return m_rgpTabs.size();
 }
 
-String TabCtrl::GetTabLabel( ULONG nTab ) const
+String TabCtrl::getTabLabel( ULONG nTab ) const
 {
 	WFX_CONDITION(nTab < m_rgpTabs.size());
 	if (nTab < m_rgpTabs.size())
 	{
-		return m_rgpTabs[nTab]->GetText();
+		return m_rgpTabs[nTab]->getText();
 	}
 	return L"";
 }
 
-void TabCtrl::SetTabLabel( ULONG nTab, const String& strTabLabel )
+void TabCtrl::setTabLabel( ULONG nTab, const String& strTabLabel )
 {
 	WFX_CONDITION(nTab < m_rgpTabs.size());
 	if (nTab < m_rgpTabs.size())
 	{
-		m_rgpTabs[nTab]->SetText(strTabLabel);
+		m_rgpTabs[nTab]->setText(strTabLabel);
 	}
 }
 
-void TabCtrl::RecalcLayout()
+void TabCtrl::recalcLayout()
 {
-	SendWidMessage(WM_SIZE);
+	sendMessage(WM_SIZE);
 }
 
-LRESULT TabCtrl::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TabCtrl::onCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	ULONG nItems = m_rgpTabs.size();
 	Rect rcItem;
 	for (ULONG nTab = 0; nTab < nItems; nTab++)
 	{
-		m_rgpTabs[nTab]->m_pWid->Create(rcItem, this);
+		m_rgpTabs[nTab]->m_pWid->create(rcItem, this);
 	}
 	return 1;
 }
 
-LRESULT TabCtrl::OnLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TabCtrl::onLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Point pt(lParam);
 	ULONG nTabCliked = 0;
 	if (m_rcTabArea.PtInRect(pt))
 	{
-		nTabCliked = GetTabPt(pt);
+		nTabCliked = getTabPt(pt);
 	}
-	if (IsValidTab(nTabCliked))
+	if (isValidTab(nTabCliked))
 	{
-		ShowTab(nTabCliked);
+		showTab(nTabCliked);
 	}
 	return 1;
 }
 
-LRESULT TabCtrl::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TabCtrl::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	return 1;
 }
 
-LRESULT TabCtrl::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TabCtrl::onSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Rect rcWid = GetRect();
+	Rect rcWid = getRect();
 	Rect rcTabItem = rcWid;
 	rcTabItem.bottom = rcWid.top + m_nTabHeight;
 	m_rcTabArea = rcTabItem;
@@ -188,7 +191,7 @@ LRESULT TabCtrl::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled
 	for (ULONG nTab = 0; nTab < nItems; nTab++)
 	{
 		rcTabItem.right = rcTabItem.left + m_nTabWidth;
-		m_rgpTabs[nTab]->SetRect(rcTabItem);
+		m_rgpTabs[nTab]->setRect(rcTabItem);
 		rcTabItem.left += m_nTabWidth;
 	}
 	m_rcActivate = rcWid;
@@ -197,13 +200,13 @@ LRESULT TabCtrl::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled
 	if (m_nCurrentTab < m_rgpTabs.size())
 	{
 		WFX_CONDITION(m_rgpTabs[m_nCurrentTab]->m_pWid != NULL);
-		m_rgpTabs[m_nCurrentTab]->m_pWid->SetRect(m_rcActivate);
-		m_rgpTabs[m_nCurrentTab]->m_pWid->ShowWid(SW_SHOW);
+		m_rgpTabs[m_nCurrentTab]->m_pWid->setRect(m_rcActivate);
+		m_rgpTabs[m_nCurrentTab]->m_pWid->showWid(SW_SHOW);
 	}
 	return 1;
 }
 
-void TabCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
+void TabCtrl::onDraw( HDC hdc, const Rect& rcPaint )
 {
 	ULONG nItems = m_rgpTabs.size();
 	for (ULONG nTab = 0; nTab < nItems; nTab++)
@@ -212,12 +215,12 @@ void TabCtrl::OnDraw( HDC hdc, const Rect& rcPaint )
 	}
 }
 
-ULONG TabCtrl::GetTabPt( const Point& pt ) const
+ULONG TabCtrl::getTabPt( const Point& pt ) const
 {
 	ULONG nItems = m_rgpTabs.size();
 	for (ULONG nTab = 0; nTab < nItems; nTab++)
 	{
-		if (m_rgpTabs[nTab]->GetRect().PtInRect(pt))
+		if (m_rgpTabs[nTab]->getRect().PtInRect(pt))
 		{
 			return nTab;
 		}
@@ -225,7 +228,7 @@ ULONG TabCtrl::GetTabPt( const Point& pt ) const
 	return 0;
 }
 
-BOOL TabCtrl::IsValidTab( ULONG nTab ) const
+BOOL TabCtrl::isValidTab( ULONG nTab ) const
 {
 	return nTab < m_rgpTabs.size();
 }

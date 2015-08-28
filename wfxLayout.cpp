@@ -19,63 +19,63 @@ Layout::Layout()
 
 }
 
-BOOL Layout::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL Layout::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	return TRUE;
 }
 
-void Layout::DoLayout( Widget* pWid, Desc* pDesc, const Rect& rcGrid )
+void Layout::doLayout( Widget* pWid, Desc* pDesc, const Rect& rcGrid )
 {
 
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-Grid::Grid( CPLayoutFactory& pFactory )
+Grid::Grid( CSPLayoutFactory& pFactory )
 : m_pLayoutFactory(pFactory)
 {
 
 }
 
-void Grid::AddWidget( Widget* pWidget, CLayoutDesc& desc )
+void Grid::addItem( Widget* pWidget, CLayoutDesc& desc )
 {
 	m_rgWidLayout.push_back(std::make_pair(pWidget, desc));
 }
 
-ULONG Grid::GetWidLayout( Wid2DescList& rgWidLayout )
+ULONG Grid::getWidLayout( Wid2DescList& rgWidLayout )
 {
 	rgWidLayout = m_rgWidLayout;
 	return rgWidLayout.size();
 }
 
-void Grid::DoLayout()
+void Grid::doLayout()
 {
 	if (m_pLayout == NULL)
 	{
-		m_pLayout = m_pLayoutFactory->CreateObject();
+		m_pLayout = m_pLayoutFactory->createObject();
 	}
-	Rect rcGrid = GetRect();
+	Rect rcGrid = getRect();
 	ULONG nItems = m_rgWidLayout.size();
 	for (ULONG i = 0; i < nItems; i++)
 	{
-		m_pLayout->DoLayout(m_rgWidLayout[i].first, 
+		m_pLayout->doLayout(m_rgWidLayout[i].first, 
 			&(m_rgWidLayout[i].second), rcGrid);
 	}
 }
 
-LRESULT Grid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Grid::onCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	Rect rc;
 	ULONG nItems = m_rgWidLayout.size();
 	for (ULONG i = 0; i < nItems; i++)
 	{
 		WFX_CONDITION(m_rgWidLayout[i].first != NULL);
-		m_rgWidLayout[i].first->Create(rc, this);
+		m_rgWidLayout[i].first->create(rc, this);
 	}
 	return 1;
 }
 
-LRESULT Grid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Grid::onSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	DoLayout();
+	doLayout();
 	return 1;
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -84,38 +84,38 @@ LayoutDispatch::LayoutDispatch()
 
 }
 
-void LayoutDispatch::SetGrid( Grid* pGrid )
+void LayoutDispatch::setGrid( Grid* pGrid )
 {
 	m_pRoot = pGrid;
 }
 
-Grid* LayoutDispatch::GetGrid() const
+Grid* LayoutDispatch::getGrid() const
 {
 	return m_pRoot;
 }
 
-LRESULT LayoutDispatch::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+LRESULT LayoutDispatch::onCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 						 BOOL& bHandled)
 {
 	WFX_CONDITION(m_pRoot != NULL);
 	if (m_pRoot != NULL)
 	{
 		Rect rc;
-		m_pRoot->Create(rc, NULL, this);
+		m_pRoot->create(rc, NULL, this);
 	}
 	return 1;
 }
 
-LRESULT LayoutDispatch::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+LRESULT LayoutDispatch::onSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 					   BOOL& bHandled)
 {
 	WFX_CONDITION(m_pRoot != NULL);
 	if (m_pRoot != NULL)
 	{
-		WFX_CONDITION(GetHwnd() != NULL);
+		WFX_CONDITION(getHwnd() != NULL);
 		Rect rcClient;
-		::GetClientRect(GetHwnd(), &rcClient);
-		m_pRoot->SetRect(rcClient);
+		::GetClientRect(getHwnd(), &rcClient);
+		m_pRoot->setRect(rcClient);
 	}
 	return 1;
 }

@@ -10,7 +10,7 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -20,12 +20,12 @@ CheckBox::CheckBox()
 : Button(TRUE)
 , m_lOffset(0)
 {
-	SetText(L"CheckBox");
+	setText(L"CheckBox");
 }
 
-LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT CheckBox::onSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Rect rc = GetRect();
+	Rect rc = getRect();
 	rc.left += 2;
 	rc.right = rc.left + WID_CKB_SIZE;
 	rc.top = rc.top + (rc.bottom - rc.top - WID_CKB_SIZE) / 2;
@@ -35,19 +35,19 @@ LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	return 0;
 }
 
-void CheckBox::OnDraw( HDC hdc, const Rect& rcPaint )
+void CheckBox::onDraw( HDC hdc, const Rect& rcPaint )
 {
-	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, GetDispatcher());
-	WfxRender::DrawCheckBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), GetDispatcher());
+	WfxRender::drawCheckBox(hdc, getText(), getRect(), 0, m_lOffset, getDispatcher());
+	WfxRender::drawCheckBoxItem(hdc, getItemRect(), getState(), isChecked(), getDispatcher());
 }
 
 
-Gdiplus::Image* CheckBox::GetItemImage() const
+Gdiplus::Image* CheckBox::getItemImage() const
 {
 	return m_bChecked? m_pImageChecked.get() : m_pImageUnCheck.get();
 }
 
-Rect CheckBox::GetItemRect() const
+Rect CheckBox::getItemRect() const
 {
 	return m_rcItem;
 }

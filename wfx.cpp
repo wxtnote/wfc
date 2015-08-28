@@ -27,10 +27,10 @@ void __Trace( const wchar_t* pstrFormat, ... )
 	{
 		return;
 	}
-	int nLength = String::GetFormattedLength(pstrFormat, arglist);
+	int nLength = String::getFormattedLength(pstrFormat, arglist);
 	wchar_t* pszBuffer = new wchar_t[nLength + 1];
 	::ZeroMemory(pszBuffer, nLength + 1);
-	String::Format(pszBuffer, nLength + 1, pstrFormat, arglist);
+	String::format(pszBuffer, nLength + 1, pstrFormat, arglist);
 	va_end(arglist);
 	String str = pszBuffer;
 	delete []pszBuffer;
@@ -39,34 +39,34 @@ void __Trace( const wchar_t* pstrFormat, ... )
 #endif
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-void String::Format( const wchar_t* pszFormat, ... )
+void String::format( const wchar_t* pszFormat, ... )
 {
 	va_list arglist;
 	va_start(arglist, pszFormat);
-	FormatV(pszFormat, arglist);
+	formatV(pszFormat, arglist);
 	va_end(arglist);
 }
 
-int String::Format( wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args )
+int String::format( wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args )
 {
 	return vswprintf_s(pszBuffer, nLength, pszFormat, args);
 }
 
-void String::FormatV( const wchar_t* pszFormat, va_list args )
+void String::formatV( const wchar_t* pszFormat, va_list args )
 {
 	if (pszFormat == NULL)
 	{
 		return;
 	}
-	int nLength = GetFormattedLength(pszFormat, args);
+	int nLength = getFormattedLength(pszFormat, args);
 	wchar_t* pszBuffer = new wchar_t[nLength + 1];
 	::ZeroMemory(pszBuffer, nLength + 1);
-	Format(pszBuffer, nLength + 1, pszFormat, args);
+	format(pszBuffer, nLength + 1, pszFormat, args);
 	std::wstring::operator=(String(pszBuffer));
 	delete []pszBuffer;
 }
 
-int String::GetFormattedLength( const wchar_t* pszFormat, va_list args )
+int String::getFormattedLength( const wchar_t* pszFormat, va_list args )
 {
 	return _vscwprintf(pszFormat, args);
 }
@@ -97,7 +97,7 @@ String& String::operator=(const String& rh)
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Rect::Rect()
 {
-	Empty();
+	empty();
 }
 
 Rect::Rect( const RECT& src )
@@ -116,22 +116,22 @@ Rect::Rect( LONG iLeft, LONG iTop, LONG iRight, LONG iBottom )
 	bottom = iBottom;
 }
 
-LONG Rect::GetWidth() const
+LONG Rect::getWidth() const
 {
 	return right - left;
 }
 
-LONG Rect::GetHeight() const
+LONG Rect::getHeight() const
 {
 	return bottom - top;
 }
 
-void Rect::Empty()
+void Rect::empty()
 {
 	left = top = right = bottom = 0;
 }
 
-void Rect::Join( const RECT& rc )
+void Rect::join( const RECT& rc )
 {
 	if( rc.left < left ) left = rc.left;
 	if( rc.top < top ) top = rc.top;
@@ -139,33 +139,33 @@ void Rect::Join( const RECT& rc )
 	if( rc.bottom > bottom ) bottom = rc.bottom;
 }
 
-void Rect::ResetOffset()
+void Rect::resetOffset()
 {
 	::OffsetRect(this, -left, -top);
 }
 
-void Rect::Normalize()
+void Rect::normalize()
 {
 	if( left > right ) { int iTemp = left; left = right; right = iTemp; }
 	if( top > bottom ) { int iTemp = top; top = bottom; bottom = iTemp; }
 }
 
-void Rect::Offset( LONG cx, LONG cy )
+void Rect::offset( LONG cx, LONG cy )
 {
 	::OffsetRect(this, cx, cy);
 }
 
-void Rect::Inflate( LONG cx, LONG cy )
+void Rect::inflate( LONG cx, LONG cy )
 {
 	::InflateRect(this, cx, cy);
 }
 
-void Rect::Deflate( LONG cx, LONG cy )
+void Rect::deflate( LONG cx, LONG cy )
 {
 	::InflateRect(this, -cx, -cy);
 }
 
-void Rect::Union( Rect& rc )
+void Rect::united( Rect& rc )
 {
 	::UnionRect(this, this, &rc);
 }
@@ -185,7 +185,7 @@ BOOL Rect::PtInRect( POINT pt ) const
 	return ::PtInRect((tagRECT*)this, pt);
 }
 
-BOOL Rect::IsValid() const
+BOOL Rect::isValid() const
 {
 	return (left >= 0)
 		&& (top >= 0)
@@ -195,23 +195,23 @@ BOOL Rect::IsValid() const
 		&& (bottom >= top);
 }
 
-BOOL Rect::IsEmpty() const
+BOOL Rect::isEmpty() const
 {
-	if (IsValid())
+	if (isValid())
 	{
 		return (0 == left)
 			&& (0 == top)
 			&& (0 == right)
 			&& (0 == bottom);
 	}
-	// InValid Is Empty, of course
+	// InValid Is empty, of course
 	return TRUE;
 }
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Size::Size()
 {
-	Empty();
+	empty();
 }
 
 Size::Size( const SIZE& src )
@@ -239,7 +239,7 @@ Size::Size( LPARAM lParam )
 }
 
 
-void Size::Empty()
+void Size::empty()
 {
 	cx = cy = 0;
 }
@@ -257,7 +257,7 @@ Size::operator LPARAM()
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Point::Point( )
 {
-	Empty();
+	empty();
 }
 
 Point::Point( const POINT& src )
@@ -278,7 +278,7 @@ Point::Point( LPARAM lParam )
 	y = GET_Y_LPARAM(lParam);
 }
 
-void Point::Empty()
+void Point::empty()
 {
 	x = y = 0;
 }
@@ -294,7 +294,7 @@ void Point::operator=( LPARAM lParam )
 	y = GET_Y_LPARAM(lParam);
 }
 
-BOOL Point::IsEmpty() const
+BOOL Point::isEmpty() const
 {
 	return (x <= 0) || (y <= 0);
 }

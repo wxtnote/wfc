@@ -10,7 +10,7 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -24,28 +24,28 @@ ProcessBar::ProcessBar(int nBar /*= SB_HORZ*/)
 
 }
 
-void ProcessBar::SetRange( LONG nMin, LONG nMax )
+void ProcessBar::setRange( LONG nMin, LONG nMax )
 {
 	m_nMin = nMin;
 	m_nMax = nMax;
 }
 
-LONG ProcessBar::GetRange() const
+LONG ProcessBar::getRange() const
 {
 	return m_nMax - m_nMin;
 }
 
-LONG ProcessBar::GetMax() const
+LONG ProcessBar::getMax() const
 {
 	return m_nMax;
 }
 
-LONG ProcessBar::GetMin() const
+LONG ProcessBar::getMin() const
 {
 	return m_nMin;
 }
 
-void ProcessBar::SetPos( LONG nPos )
+void ProcessBar::setPos( LONG nPos )
 {
 	if (nPos > m_nMax)
 	{
@@ -60,29 +60,29 @@ void ProcessBar::SetPos( LONG nPos )
 		return;
 	}
 	m_nPos = nPos;
-	if (IsWidget())
+	if (isWidget())
 	{
-		InvalidWid();
+		invalidWid();
 	}
-	SendParentMessage(WUM_CMN_SETPOS, (WPARAM)GetID(), (LPARAM)nPos);
+	sendParentMessage(WUM_CMN_SETPOS, (WPARAM)getID(), (LPARAM)nPos);
 }
 
-LONG ProcessBar::GetPos() const
+LONG ProcessBar::getPos() const
 {
 	return m_nPos;
 }
 
-BOOL ProcessBar::IsCompleted() const
+BOOL ProcessBar::isCompleted() const
 {
 	return m_nPos == m_nMax;
 }
 
-void ProcessBar::Reset()
+void ProcessBar::reset()
 {
 	m_nPos = m_nMin;
 }
 
-void ProcessBar::OnDraw( HDC hdc, const Rect& rc )
+void ProcessBar::onDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawProcessBar(hdc, GetRect(), GetState(), m_nMax, m_nPos, GetDispatcher());
+	WfxRender::drawProcessBar(hdc, getRect(), getState(), m_nMax, m_nPos, getDispatcher());
 }

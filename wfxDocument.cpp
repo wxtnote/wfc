@@ -20,27 +20,27 @@ Document::Document()
 
 }
 
-BOOL Document::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL Document::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	return TRUE;
 }
 
-BOOL Document::Open()
+BOOL Document::open()
 {
 	return TRUE;
 }
 
-BOOL Document::Close()
+BOOL Document::close()
 {
 	return TRUE;
 }
 
-View* Document::GetView() const
+View* Document::getView() const
 {
 	return m_pView;
 }
 
-void Document::SetView( View* pView )
+void Document::setView( View* pView )
 {
 	m_pView = pView;
 }

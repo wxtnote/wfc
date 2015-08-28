@@ -11,7 +11,7 @@
 
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;

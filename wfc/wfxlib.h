@@ -13,8 +13,8 @@
 #include "wfx.h"
 #include "wfxwidget.h"
 #include "wfxrender.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxlayout.h"
-#include "wfxtabctrl.h"
+
 #include "wfxcmnwnd.h"
-#include "wfxPane.h"
+#include "wfxContainer.h"

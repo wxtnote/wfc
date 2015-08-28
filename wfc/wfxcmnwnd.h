@@ -25,84 +25,84 @@ public:
 	CommonWid();
 public:
 	WFX_BEGIN_MSG_MAP(CommonWid)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_COMMAND_HANDLER(WID_BTNID_MAX, BN_CLICKED, OnMax)
-		WFX_COMMAND_HANDLER(WID_BTNID_MIN, BN_CLICKED, OnMin)
-		WFX_COMMAND_HANDLER(WID_BTNID_CLOSE, BN_CLICKED, OnClose)
+		WFX_ON_MESSAGE(WM_CREATE, onCreate)
+		WFX_ON_MESSAGE(WM_SIZE, onSize)
+		WFX_ON_COMMOND(WID_BTNID_MAX, BN_CLICKED, onMax)
+		WFX_ON_COMMOND(WID_BTNID_MIN, BN_CLICKED, onMin)
+		WFX_ON_COMMOND(WID_BTNID_CLOSE, BN_CLICKED, onClose)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnMax(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onMax(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnMin(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onMin(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onClose(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
-	virtual BOOL IsCaption(const Point& pt);
-	virtual Rect GetClientRect() const;
+	virtual BOOL isCaption(const Point& pt);
+	virtual Rect getClientRect() const;
 protected:
-	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
+	virtual void onDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	PButton m_pBtnMax;
-	PButton m_pBtnMin;
-	PButton m_pBtnClose;
-	PImage m_pImage;
+	SPButton m_pBtnMax;
+	SPButton m_pBtnMin;
+	SPButton m_pBtnClose;
+	SPImage m_pImage;
 	Rect m_rcCaption;
 	Rect m_rcClient;
 	Rect m_rcStatusBar;
 };
 
 typedef CommonWid RootWid;
-typedef SharedPtr<RootWid> PRootWid;
+typedef std::tr1::shared_ptr<RootWid> SPRootWid;
 
 class WFX_API CommonWnd : public WidgetWnd
 {
 public:
 	CommonWnd();
 public:
-	virtual BOOL Initialize();
+	virtual BOOL initialize();
 public:
-	BOOL Create(const String& strName, const Rect& rc, HWND hParent = NULL);
+	BOOL create(const String& strName, const Rect& rc, HWND hParent = NULL);
 public:
 	WFX_BEGIN_MSG_MAP(CommonWnd)
-		WFX_MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
-		WFX_MESSAGE_HANDLER(WM_NCPAINT, OnNCPaint)
-		WFX_MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
-		WFX_MESSAGE_HANDLER(WM_NCCALCSIZE, OnNCCalcSize)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+		WFX_ON_MESSAGE(WM_NCACTIVATE, onNCActivate)
+		WFX_ON_MESSAGE(WM_NCPAINT, onNCPaint)
+		WFX_ON_MESSAGE(WM_NCHITTEST, onNCHitTest)
+		WFX_ON_MESSAGE(WM_NCCALCSIZE, onNCcalcSize)
+		WFX_ON_MESSAGE(WM_CREATE, onCreate)
+		WFX_ON_MESSAGE(WM_SIZE, onSize)
+		WFX_ON_MESSAGE(WM_GETMINMAXINFO, ongetMinMaxInfo)
 	WFX_CHAIN_MSG_MAP(WidgetWnd)
 	WFX_END_MSG_MAP()
 public:
-	virtual LPCWSTR GetWindowClassName() const;
-	virtual UINT GetClassStyle() const;
+	virtual LPCWSTR getWindowClassName() const;
+	virtual UINT getClassStyle() const;
 public:
-	wfx_msg LRESULT OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnNCPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onNCPaint(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnNCCalcSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onNCcalcSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT ongetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
-	PRootWid m_pRoot;
+	SPRootWid m_pRoot;
 };
 
-typedef SharedPtr<CommonWnd> PCommonWnd;
+typedef std::tr1::shared_ptr<CommonWnd> SPCommonWnd;
 
 class WFX_API FrameWnd : public CommonWnd
 {
@@ -110,23 +110,23 @@ public:
 	FrameWnd();
 public:
 	WFX_BEGIN_MSG_MAP(FrameWnd)
-		WFX_MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
-		WFX_MESSAGE_HANDLER(WM_CLOSE, OnClose)
+		WFX_ON_MESSAGE(WM_NCACTIVATE, onNCActivate)
+		WFX_ON_MESSAGE(WM_CLOSE, onClose)
 		WFX_CHAIN_MSG_MAP(CommonWnd)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onClose(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 };
 
-typedef SharedPtr<FrameWnd> PFrameWnd;
+typedef std::tr1::shared_ptr<FrameWnd> SPFrameWnd;
 
 class WFX_API Dialog : public CommonWnd
 {
 public:
-	int DoModal();
+	int doModal();
 };
 
 WFX_API int WfxMessageBox(const String& strText);

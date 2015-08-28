@@ -28,7 +28,7 @@ class Layout : public MsgMap
 protected:
 	Layout();
 public:
-	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	virtual BOOL processMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 public:
 	struct Desc
@@ -37,11 +37,11 @@ public:
 		Rect	m_rcMargin;
 	};
 public:
-	virtual void DoLayout(Widget* pWid, Desc* pDesc, const Rect& rcGrid);
+	virtual void doLayout(Widget* pWid, Desc* pDesc, const Rect& rcGrid);
 
 };
 
-typedef SharedPtr<Layout>				PLayout;
+typedef std::tr1::shared_ptr<Layout>				SPLayout;
 
 typedef Layout::Desc					LayoutDesc;
 typedef const Layout::Desc				CLayoutDesc;
@@ -49,57 +49,57 @@ typedef std::pair<Widget*, LayoutDesc>	Wid2Desc;
 typedef std::vector<Wid2Desc>			Wid2DescList;
 
 typedef Factory<Layout>					LayoutFactory;
-typedef SharedPtr<LayoutFactory>		PLayoutFactory;
-typedef const PLayoutFactory			CPLayoutFactory;
-
+typedef std::tr1::shared_ptr<LayoutFactory>		SPLayoutFactory;
+typedef const SPLayoutFactory			CSPLayoutFactory;
+typedef _my_ptr<Grid> PGrid;
 class WFX_API Grid : public Widget
 {
 public:
-	Grid(CPLayoutFactory& pFactory);
+	Grid(CSPLayoutFactory& pFactory);
 public:
-	void AddWidget(Widget* pWidget, CLayoutDesc& desc);
-	ULONG GetWidLayout(Wid2DescList& rgWidLayout);
-	void DoLayout();
+	void addItem(Widget* pWidget, CLayoutDesc& desc);
+	ULONG getWidLayout(Wid2DescList& rgWidLayout);
+	void doLayout();
 	WFX_BEGIN_MSG_MAP(Grid)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_ON_MESSAGE(WM_CREATE, onCreate)
+		WFX_ON_MESSAGE(WM_SIZE, onSize)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	BOOL& bHandled);
-	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
 	Wid2DescList m_rgWidLayout;
-	PLayout m_pLayout;
-	PLayoutFactory m_pLayoutFactory;
+	SPLayout m_pLayout;
+	SPLayoutFactory m_pLayoutFactory;
 };
 
-typedef SharedPtr<Grid> PGrid;
+typedef std::tr1::shared_ptr<Grid> SPGrid;
 
 class WFX_API LayoutDispatch : public Dispatcher
 {
 public:
 	LayoutDispatch();
 public:
-	void SetGrid(Grid* pGrid);
-	Grid* GetGrid() const;
+	void setGrid(Grid* pGrid);
+	Grid* getGrid() const;
 public:
 	WFX_BEGIN_MSG_MAP(LayoutDispatch)
-		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_ON_MESSAGE(WM_CREATE, onCreate)
+		WFX_ON_MESSAGE(WM_SIZE, onSize)
 		WFX_CHAIN_MSG_MAP(Dispatcher)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT onSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
-	Grid* m_pRoot;
+	PGrid m_pRoot;
 };
 
-typedef SharedPtr<LayoutDispatch> PLayoutDispatch;
+typedef std::tr1::shared_ptr<LayoutDispatch> SPLayoutDispatch;
 
 END_NAMESPACE_WFX

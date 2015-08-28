@@ -8,36 +8,39 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
+
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxfrmwk.h"
+#include "wfxrender.h"
+#include "wfxContainer.h"
 
 USING_NAMESPACE_WFX;
 
-Application::Application( HINSTANCE hInstance, SPFrame pFrame /*= SPFrame()*/ )
-: m_hInstance(hInstance)
-, m_pDocMgr(new DocManager)
-, m_pFrame(pFrame)
+void Container::addItem( Widget* pItem )
 {
-
+	m_rgpItem.push_back(SPWidget(pItem));
 }
 
-void Application::addDocument( CSPDocFactory& pDocFactory, CSPViewFactroy& pViewFactory )
+void Container::removeItem( Widget* pItem )
 {
-
+	for (std::vector<SPWidget>::iterator it = m_rgpItem.begin();
+		it != m_rgpItem.end(); ++it)
+	{
+		if ((*it).get() == pItem)
+		{
+			(*it).reset();
+			m_rgpItem.erase(it);
+			break;
+		}
+	}
 }
 
-BOOL Application::initInstance()
+void Container::removeAll()
 {
-	return FALSE;
+	m_rgpItem.clear();
 }
 
-int Application::exitInstance()
+Container::~Container()
 {
-	return 1;
-}
 
-int Application::run()
-{
-	return 1;
 }

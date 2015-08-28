@@ -19,12 +19,12 @@ Frame::Frame()
 
 }
 
-Document* Frame::GetActiveDoc()
+Document* Frame::getActiveDoc()
 {
 	return NULL;
 }
 
-View* Frame::GetActiveView()
+View* Frame::getActiveView()
 {
 	return NULL;
 }

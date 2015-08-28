@@ -21,38 +21,38 @@ DocManager::DocManager()
 
 }
 
-BOOL DocManager::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL DocManager::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	return TRUE;
 }
 
-ULONG DocManager::AddDoc( CPDocFactory& pDocFactory, CPViewFactroy& pViewFactory )
+ULONG DocManager::addDoc( CSPDocFactory& pDocFactory, CSPViewFactroy& pViewFactory )
 {
 	m_rgpDocToView.push_back(std::make_pair(pDocFactory, pViewFactory));
 	return m_rgpDocToView.size();
 }
 
-Document* DocManager::Next()
+Document* DocManager::next()
 {
 	return NULL;
 }
 
-Document* DocManager::Pre()
+Document* DocManager::pre()
 {
 	return NULL;
 }
 
-Document* DocManager::GetAt( int i )
+Document* DocManager::getAt( int i )
 {
 	return NULL;
 }
 
-BOOL DocManager::Open( int i )
+BOOL DocManager::open( int i )
 {
 	return FALSE;
 }
 
-BOOL DocManager::Close( int i )
+BOOL DocManager::close( int i )
 {
 	return FALSE;
 }

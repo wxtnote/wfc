@@ -20,12 +20,12 @@ View::View()
 
 }
 
-Document* View::GetDocument() const
+Document* View::getDocument() const
 {
 	return m_pDoc;
 }
 
-void View::SetDocument( Document* pDoc )
+void View::setDocument( Document* pDoc )
 {
 	m_pDoc = pDoc;
 }

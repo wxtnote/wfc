@@ -17,7 +17,7 @@ USING_NAMESPACE_WFX;
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ScrollBar::ScrollBar( int nBar /*= SB_HORZ*/ )
-: Slider(nBar)
+: SliderBar(nBar)
 , m_pScrollInfo(new SCROLLINFO)
 , m_nArrorSize(0)
 {
@@ -33,7 +33,7 @@ ScrollBar::~ScrollBar()
 {
 }
 
-void ScrollBar::GetScrollInfo( SCROLLINFO* pScrollInfo ) const
+void ScrollBar::getScrollInfo( SCROLLINFO* pScrollInfo ) const
 {
 	WFX_CONDITION(pScrollInfo != NULL);
 	if (pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -42,7 +42,7 @@ void ScrollBar::GetScrollInfo( SCROLLINFO* pScrollInfo ) const
 	}
 }
 
-void ScrollBar::SetScrollInfo( const SCROLLINFO* pScrollInfo )
+void ScrollBar::setScrollInfo( const SCROLLINFO* pScrollInfo )
 {
 	WFX_CONDITION(pScrollInfo != NULL);
 	if (pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -51,13 +51,13 @@ void ScrollBar::SetScrollInfo( const SCROLLINFO* pScrollInfo )
 	}
 }
 
-LONG ScrollBar::CalcHorzThumbSize(const Rect& rcWid)
+LONG ScrollBar::calcHorzThumbSize(const Rect& rcWid)
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	LONG nThumbSize = 0;
 	if (m_pScrollInfo->nMax - m_pScrollInfo->nMin > 0)
 	{
-		nThumbSize = m_rcThumbHolder.GetWidth() * (float)rcWid.GetWidth() / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
+		nThumbSize = m_rcThumbHolder.getWidth() * (float)rcWid.getWidth() / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
 	}
 	if (nThumbSize < MIN_SCROLLBAR_THUMB)
 	{
@@ -66,13 +66,13 @@ LONG ScrollBar::CalcHorzThumbSize(const Rect& rcWid)
 	return nThumbSize;
 }
 
-LONG ScrollBar::CalcVertThumbSize(const Rect& rcWid)
+LONG ScrollBar::calcVertThumbSize(const Rect& rcWid)
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	LONG nThumbSize = 0;
 	if (m_pScrollInfo->nMax - m_pScrollInfo->nMin > 0)
 	{
-		nThumbSize = m_rcThumbHolder.GetHeight() * (float)rcWid.GetHeight() / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
+		nThumbSize = m_rcThumbHolder.getHeight() * (float)rcWid.getHeight() / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
 	}
 	if (nThumbSize < MIN_SCROLLBAR_THUMB)
 	{
@@ -81,7 +81,7 @@ LONG ScrollBar::CalcVertThumbSize(const Rect& rcWid)
 	return nThumbSize;
 }
 
-void ScrollBar::SetRange( LONG nMin, LONG nMax )
+void ScrollBar::setRange( LONG nMin, LONG nMax )
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -91,7 +91,7 @@ void ScrollBar::SetRange( LONG nMin, LONG nMax )
 	}
 }
 
-LONG ScrollBar::GetRange() const
+LONG ScrollBar::getRange() const
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -101,7 +101,7 @@ LONG ScrollBar::GetRange() const
 	return 0;
 }
 
-LONG ScrollBar::GetMax() const
+LONG ScrollBar::getMax() const
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -111,7 +111,7 @@ LONG ScrollBar::GetMax() const
 	return 0;
 }
 
-LONG ScrollBar::GetMin() const
+LONG ScrollBar::getMin() const
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->cbSize == sizeof(SCROLLINFO))
@@ -121,13 +121,13 @@ LONG ScrollBar::GetMin() const
 	return 0;
 }
 
-LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT ScrollBar::onSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Rect rcWid(GetRect());
+	Rect rcWid(getRect());
 	m_rcArrow1 = rcWid;
 	m_rcArrow2 = rcWid;
 	m_rcThumbHolder = rcWid;
-	m_rcThumb.Empty();
+	m_rcThumb.empty();
 	LONG nThumbSize = 0;
 	if (SB_VERT == m_nBar)
 	{
@@ -135,11 +135,11 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		m_rcArrow2.top = rcWid.bottom - m_nArrorSize;
 		m_rcThumbHolder.top = m_rcArrow1.bottom;
 		m_rcThumbHolder.bottom = m_rcArrow2.top;
-		nThumbSize = CalcVertThumbSize(rcWid);
-		SetThumbSize(nThumbSize);
-		LONG y = CalcVertThumbPos();
+		nThumbSize = calcVertThumbSize(rcWid);
+		setThumbSize(nThumbSize);
+		LONG y = calcVertThumbPos();
 		y -= WFX_ROUND((float)nThumbSize / 2);
-		SetVertThumbRect(nThumbSize, y);
+		setVertThumbRect(nThumbSize, y);
 	}
 	else
 	{
@@ -147,17 +147,17 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		m_rcArrow2.left = rcWid.right - m_nArrorSize;
 		m_rcThumbHolder.left = m_rcArrow1.right;
 		m_rcThumbHolder.right = m_rcArrow2.left;
-		nThumbSize = CalcHorzThumbSize(rcWid);
-		SetThumbSize(nThumbSize);
-		LONG x = CalcHorzThumbPos();
+		nThumbSize = calcHorzThumbSize(rcWid);
+		setThumbSize(nThumbSize);
+		LONG x = calcHorzThumbPos();
 		x -= WFX_ROUND((float)nThumbSize / 2);
-		SetHorzThumbRect(nThumbSize, x);
+		setHorzThumbRect(nThumbSize, x);
 	}
 
 	return 1;
 }
 
-void ScrollBar::SetPos( LONG nPos )
+void ScrollBar::setPos( LONG nPos )
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->nPos != nPos)
@@ -167,35 +167,35 @@ void ScrollBar::SetPos( LONG nPos )
 			m_pScrollInfo->nPos = m_pScrollInfo->nMin;
 		if (m_pScrollInfo->nPos > m_pScrollInfo->nMax)
 			m_pScrollInfo->nPos = m_pScrollInfo->nMax;
-		SendParentMessage(WUM_SB_OFFSET, m_nBar);
+		sendParentMessage(WUM_SB_OFFSET, m_nBar);
 		if (m_nBar == SB_VERT) 
 		{
-			SendParentMessage(WM_VSCROLL);
+			sendParentMessage(WM_VSCROLL);
 		}
 		else
 		{
-			SendParentMessage(WM_HSCROLL);
+			sendParentMessage(WM_HSCROLL);
 		}
 	}
 }
 
-LONG ScrollBar::GetPos() const
+LONG ScrollBar::getPos() const
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	return m_pScrollInfo->nPos;
 }
 
 
-void ScrollBar::Reset()
+void ScrollBar::reset()
 {
 	WFX_CONDITION(m_pScrollInfo != NULL);
 	m_pScrollInfo->nPos = m_pScrollInfo->nMin;
 }
 
-void ScrollBar::OnDraw( HDC hdc, const Rect& rcPaint )
+void ScrollBar::onDraw( HDC hdc, const Rect& rcPaint )
 {
-	WfxRender::DrawSolidRect(hdc, GetRect(), RGB(0, 0, 0));
-	WfxRender::DrawArror(hdc, m_rcArrow1, 0, 0);
-	WfxRender::DrawArror(hdc, m_rcArrow2, 0, 0);
-	WfxRender::DrawThumb(hdc, m_rcThumb, 0);
+	WfxRender::drawSolidRect(hdc, getRect(), RGB(0, 0, 0));
+	WfxRender::drawArror(hdc, m_rcArrow1, 0, 0);
+	WfxRender::drawArror(hdc, m_rcArrow2, 0, 0);
+	WfxRender::drawThumb(hdc, m_rcThumb, 0);
 }

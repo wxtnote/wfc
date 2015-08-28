@@ -220,6 +220,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfxContainer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\wfxDispatch.cpp"
 				>
 			</File>
@@ -272,7 +276,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfxSlider.cpp"
+				RelativePath=".\wfxSliderBar.cpp"
 				>
 			</File>
 			<File
@@ -318,15 +322,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfx\wfxBar.h"
+				RelativePath=".\wfc\wfxCmnCtrl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxCmn.h"
+				RelativePath=".\wfc\wfxCmnCtrl.inl"
 				>
 			</File>
 			<File
 				RelativePath=".\wfc\wfxCmnWnd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfc\wfxContainer.h"
 				>
 			</File>
 			<File
@@ -342,15 +350,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxPane.h"
-				>
-			</File>
-			<File
 				RelativePath=".\wfc\wfxRender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\wfc\wfxTabctrl.h"
 				>
 			</File>
 			<File

@@ -10,6 +10,6 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 
 USING_NAMESPACE_WFX;

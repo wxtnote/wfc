@@ -10,7 +10,7 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
@@ -19,47 +19,46 @@ Button::Button(BOOL bCheckable /*= FALSE*/)
 : m_bChecked(FALSE)
 , m_bCheckable(bCheckable)
 {
-	SetText(L"Button");
+	setText(L"Button");
 }
 
-void Button::OnDraw( HDC hdc, const Rect& rcPaint )
+void Button::onDraw( HDC hdc, const Rect& rcPaint )
 {
-	Gdiplus::Image* pImage = GetImageFromState();
+	Gdiplus::Image* pImage = getImageFromState();
 	if (pImage == NULL)
 	{
-		Rect rc = GetRect();
-		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), GetDispatcher());
+		WfxRender::drawButtton(hdc, getText(), getRect(), getState(), getDispatcher());
 	}
 }
 
-void Button::Check( BOOL bCheck /*= TRUE*/ )
+void Button::check( BOOL bCheck /*= TRUE*/ )
 {
 	m_bChecked = bCheck;
 }
 
-BOOL Button::IsChecked() const
+BOOL Button::isChecked() const
 {
 	return m_bChecked;
 }
 
-LRESULT Button::OnLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Button::onLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	m_bChecked = !m_bChecked;
-	SendParentMessage(WM_COMMAND, MAKELONG(GetID(), BN_CLICKED), (LPARAM)GetHwid());
-	InvalidWid();
+	sendParentMessage(WM_COMMAND, MAKELONG(getID(), BN_CLICKED), (LPARAM)getHwid());
+	invalidWid();
 	return 1;
 }
 
-LRESULT Button::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Button::onStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (m_bCheckable && m_bChecked)
 	{
 		m_clrText = (WID_TEXT_CHECKED);
 		m_clrBkgnd = (WID_BKGND_CHECKED);
 		m_clrFrame = (WID_FRAME_CHECKED);
-		InvalidWid();
+		invalidWid();
 		return 0;
 	}
-	InvalidWid();
+	invalidWid();
 	return 1;
 }

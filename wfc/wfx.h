@@ -51,6 +51,10 @@ DECLARE_HANDLE	(HWID);
 #define NULL 0
 #endif
 
+#ifndef null
+#define null NULL
+#endif
+
 #ifndef WFX_ASSERT
 #define WFX_ASSERT(expr) _ASSERT(expr)
 #endif
@@ -63,9 +67,6 @@ DECLARE_HANDLE	(HWID);
 #define WFX_CONDITION_VALID(expr) WFX_CONDITION(expr != NULL)
 #endif
 
-#define SharedPtr  std::tr1::shared_ptr
-#define WeakPtr	   std::tr1::weak_ptr
-
 BEGIN_NAMESPACE_WFX
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -77,21 +78,21 @@ public:
 	String(const String& rh);
 	String& operator=(const String& rh);
 public:
-	void Format(const wchar_t* pszFormat, ...);
+	void format(const wchar_t* pszFormat, ...);
 protected:
-	void FormatV(const wchar_t* pszFormat, va_list args);
+	void formatV(const wchar_t* pszFormat, va_list args);
 public:
-	static int GetFormattedLength(const wchar_t* pszFormat, va_list args);
-	static int Format(wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args);
+	static int getFormattedLength(const wchar_t* pszFormat, va_list args);
+	static int format(wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args);
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 template<class T>
 class Factory
 {
 public:
-	SharedPtr<T> CreateObject()
+	std::tr1::shared_ptr<T> createObject()
 	{
-		return SharedPtr<T>(new T());
+		return std::tr1::shared_ptr<T>(new T());
 	}
 };
 
@@ -99,7 +100,7 @@ public:
 	friend class Factory<classname>;
 
 #define WFX_CREATE_FACTORY(classname) \
-	SharedPtr<Factory<classname> >(new Factory<classname>())
+	std::tr1::shared_ptr<Factory<classname> >(new Factory<classname>())
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Rect : public tagRECT
 {
@@ -108,21 +109,21 @@ public:
 	Rect(const RECT& src);
 	Rect(LONG iLeft, LONG iTop, LONG iRight, LONG iBottom);
 
-	LONG GetWidth() const;
-	LONG GetHeight() const;
-	void Empty();
-	void Join(const RECT& rc);
-	void ResetOffset();
-	void Normalize();
-	void Offset(LONG cx, LONG cy);
-	void Inflate(LONG cx, LONG cy);
-	void Deflate(LONG cx, LONG cy);
-	void Union(Rect& rc);
+	LONG getWidth() const;
+	LONG getHeight() const;
+	void empty();
+	void join(const RECT& rc);
+	void resetOffset();
+	void normalize();
+	void offset(LONG cx, LONG cy);
+	void inflate(LONG cx, LONG cy);
+	void deflate(LONG cx, LONG cy);
+	void united(Rect& rc);
 	operator LPRECT();
 	operator LPCRECT();
 	BOOL PtInRect(POINT pt) const;
-	BOOL IsValid() const;
-	BOOL IsEmpty() const;
+	BOOL isValid() const;
+	BOOL isEmpty() const;
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Size : public tagSIZE
@@ -133,7 +134,7 @@ public:
 	Size(const RECT& rc);
 	Size(LONG cx, LONG cy);
 	Size(LPARAM lParam);
-	void Empty();
+	void empty();
 	operator LPSIZE();
 	operator LPARAM();
 
@@ -147,10 +148,52 @@ public:
 	Point(LONG x, LONG y);
 	Point(LPARAM lParam);
 	void operator=(LPARAM lParam);
-	void Empty();
-	BOOL IsEmpty() const;
+	void empty();
+	BOOL isEmpty() const;
 	operator LPPOINT();
 	operator LPARAM();
+};
+
+template <class _Ty>
+class _my_ptr
+{
+public:
+	_my_ptr(_Ty* p = NULL)
+		:_Ptr(p)
+	{
+
+	}
+	_my_ptr& operator=(_Ty* p)
+	{
+		_Ptr = p;
+		return *this;
+	}
+	void reset()
+	{
+		_Ptr = NULL;
+	}
+	_Ty* get() const
+	{
+		return _Ptr;
+	}
+	_Ty* operator->(void) const
+	{
+		return _Ptr;
+	}
+	operator _Ty*(void) const
+	{
+		return _Ptr;
+	}
+	friend BOOL operator==(const _my_ptr<_Ty>& rf, _Ty* p)
+	{
+		return rf._Ptr == p;
+	}
+	friend BOOL operator!=(const _my_ptr<_Ty>& rf, _Ty* p)
+	{
+		return rf._Ptr != p;
+	}
+private:
+	_Ty* _Ptr;
 };
 
 END_NAMESPACE_WFX
@@ -227,10 +270,10 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_FONT_PUSH		L"свт╡"
 #define WID_FONT_CHECKED	L"свт╡"
 
-#define WID_FSIZE_STATIC	18
-#define WID_FSIZE_MOUSE		18
-#define WID_FSIZE_PUSH		18
-#define WID_FSIZE_CHECKED	18
+#define WID_FSIZE_STATIC	16
+#define WID_FSIZE_MOUSE		16
+#define WID_FSIZE_PUSH		16
+#define WID_FSIZE_CHECKED	16
 
 #define WBTN_BKGND_STATIC	RGB(0, 0, 0)
 #define WBTN_BKGND_MOUSE	RGB(77, 137, 193)
@@ -328,7 +371,7 @@ enum Wfx_LC_Param
 
 #define WFX_BEGIN_MSG_MAP(theClass)\
 	public:\
-	BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID)\
+	BOOL processMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID)\
 {\
 	BOOL bHandled = TRUE;\
 	(uMsg); \
@@ -340,7 +383,7 @@ enum Wfx_LC_Param
 { \
 	case 0:
 
-#define WFX_MESSAGE_HANDLER(msg, func) \
+#define WFX_ON_MESSAGE(msg, func) \
 	if (uMsg == msg) \
 { \
 	bHandled = TRUE; \
@@ -349,7 +392,7 @@ enum Wfx_LC_Param
 	return TRUE; \
 }
 
-#define WFX_COMMAND_HANDLER(id, code, func) \
+#define WFX_ON_COMMOND(id, code, func) \
 	if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
 	{\
 		bHandled = TRUE; \
@@ -360,9 +403,12 @@ enum Wfx_LC_Param
 		}\
 	}
 
+#define WFX_ON_CLICKED(id, func) \
+	WFX_ON_COMMOND(id, BN_CLICKED, func)
+
 #define WFX_CHAIN_MSG_MAP(theChainClass) \
 { \
-	if(theChainClass::ProcessMessage(uMsg, wParam, lParam, lResult, dwMsgMapID)) \
+	if(theChainClass::processMessage(uMsg, wParam, lParam, lResult, dwMsgMapID)) \
 	return TRUE; \
 }
 
@@ -384,10 +430,10 @@ enum Wfx_LC_Param
 
 BEGIN_NAMESPACE_WFX
 
-typedef SharedPtr<Gdiplus::Image>				PImage;
+typedef std::tr1::shared_ptr<Gdiplus::Image>				SPImage;
 #define WFX_GET_IMAGE(filename) Gdiplus::Image::FromFile(filename)
-typedef SharedPtr<LOGFONTW>						PFont;
-typedef SharedPtr<TOOLINFOW>					PToolInfo;
+typedef std::tr1::shared_ptr<LOGFONTW>						SPFont;
+typedef std::tr1::shared_ptr<TOOLINFOW>					SPToolInfo;
 
 enum Wid_Type
 {
@@ -408,8 +454,8 @@ class SimpleHashTable
 public:
 	SimpleHashTable();
 public:
-	LONG AddItem(LONG nKey, LONG nValue);
-	LONG GetValue(LONG nKey);
+	LONG addItem(LONG nKey, LONG nValue);
+	LONG getValue(LONG nKey);
 private:
 	LONG** m_pTable;
 };

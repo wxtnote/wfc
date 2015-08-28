@@ -10,31 +10,33 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-HWND TextBoxWnd::CreateInPlaceWindow()
+HWND TextBoxWnd::createInPlaceWindow()
 {
-	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner);
+	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner.get());
 	WFX_CONDITION(pTextBox != NULL);
-	WFX_CONDITION(pTextBox->GetDispatcher() != NULL);
-	Rect rcParent = pTextBox->GetParentRect();
-	Rect rcWid = pTextBox->GetRect();
+	WFX_CONDITION(pTextBox->getDispatcher() != NULL);
+	Rect rcParent;
+	pTextBox->getParentRect(rcParent);
+	Rect rcWid = pTextBox->getRect();
 	rcWid.bottom = min(rcParent.bottom, rcWid.bottom);
 	rcWid.right = min(rcParent.right , rcWid.right);
 	Rect rc = rcWid;
-	Create(m_pOwner->GetDispatcher()->GetHwnd(),
+	rc.deflate(1, 1);
+	create(m_pOwner->getDispatcher()->getHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);
-	SetFont(WfxRender::GetFontObject());
-	SetText(m_pOwner->GetText());
+	setFont(WfxRender::getFontObject());
+	setText(m_pOwner->getText());
 	Edit_SetModify(m_hWnd, FALSE);
-	SendMessageW(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(2, 2));
+	SendMessageW(m_hWnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(2, 2));
 	Edit_SetSel(m_hWnd, 0, -1);
 	Edit_Enable(m_hWnd, TRUE);
 	Edit_SetReadOnly(m_hWnd, FALSE);
-	if (pTextBox->GetMode() & WID_TBM_PW)
+	if (pTextBox->getMode() & WID_TBM_PW)
 	{
 		Edit_SetPasswordChar(m_hWnd,L'*');
 	}
@@ -43,21 +45,21 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	return m_hWnd;
 }
 
-LPCWSTR TextBoxWnd::GetWindowClassName() const
+LPCWSTR TextBoxWnd::getWindowClassName() const
 {
 	return L"TextBoxWnd";
 }
 
-LPCWSTR TextBoxWnd::GetSuperClassName() const
+LPCWSTR TextBoxWnd::getSuperClassName() const
 {
 	return WC_EDITW;
 }
 
-LRESULT TextBoxWnd::OnEditChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TextBoxWnd::onEditChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (GET_WM_COMMAND_CMD(wParam, lParam) == EN_CHANGE && m_pOwner != NULL)
 	{
-		m_pOwner->SetText(GetText());
+		m_pOwner->setText(getText());
 	}
 	else
 	{
@@ -66,82 +68,85 @@ LRESULT TextBoxWnd::OnEditChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
-LRESULT TextBoxWnd::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TextBoxWnd::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	bHandled = FALSE;
 	if (m_pOwner != NULL)
 	{
-		m_pOwner->SendWidMessage(uMsg, wParam, lParam);
+		m_pOwner->sendMessage(uMsg, wParam, lParam);
 	}
 	return 1;
 }
 
 
-void TextBoxWnd::OnInPlaceWindowKillFocus()
+void TextBoxWnd::onInPlaceWindowKillFocus()
 {
 	if (m_pOwner == NULL)
 	{
 		return;
 	}
-	m_pOwner->SetText(GetText());
+	m_pOwner->setText(getText());
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TextBox::TextBox( WORD wMode /*= WID_TBM_READWRITE*/ )
 : m_wMode(wMode)
 , m_bEditting(FALSE)
 {
-	SetText(L"TextBox");
+	setText(L"TextBox");
 }
 
-BOOL TextBox::Initial()
+BOOL TextBox::initial()
 {
-	if (IsReadonly())
+	if (isReadonly())
 	{
 		return FALSE;
 	}
 	m_bEditting = TRUE;
 	m_pWindow = new TextBoxWnd;
-	m_pWindow->Initial(this);
+	m_pWindow->initial(this);
 	return FALSE;
 }
 
-String TextBox::GetShowText() const
+String TextBox::getShowText() const
 {
 	String str;
-	if (GetMode() & WID_TBM_PW)
+	if (getMode() & WID_TBM_PW)
 	{
-		str.assign(GetText().length(), L'*');
+		str.assign(getText().length(), L'*');
 	}
 	else
 	{
-		return GetText();
+		return getText();
 	}
 	return str;
 }
 
-void TextBox::OnDraw(HDC hdc, const Rect& rcPaint)
+void TextBox::onDraw(HDC hdc, const Rect& rcPaint)
 {
-	String str = GetShowText();
-	WfxRender::DrawTextBox(hdc, str, GetRect(), GetState(), GetMode(), GetDispatcher());
+	String str = getShowText();
+	WfxRender::drawTextBox(hdc, str, getRect(), getState(), getMode(), getDispatcher());
 }
 
-String TextBox::GetToolTip() const
+String TextBox::getToolTip() const
 {
-	return GetShowText();
+	return getShowText();
 }
 
-LRESULT TextBox::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TextBox::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_IBEAM)));
-	return __super::OnMouseMove(uMsg, wParam, lParam, bHandled);
+	if (!isReadonly())
+	{
+		::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_IBEAM)));
+	}
+	return __super::onMouseMove(uMsg, wParam, lParam, bHandled);
 }
 
-LRESULT TextBox::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT TextBox::onMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	return 1;
 }
 
-void TextBox::SetMode( WORD wMode, BOOL bAdd /*= FALSE*/ )
+void TextBox::setMode( WORD wMode, BOOL bAdd /*= FALSE*/ )
 {
 	if (bAdd)
 	{
@@ -153,17 +158,17 @@ void TextBox::SetMode( WORD wMode, BOOL bAdd /*= FALSE*/ )
 	}
 }
 
-WORD TextBox::GetMode() const
+WORD TextBox::getMode() const
 {
 	return m_wMode;
 }
 
-BOOL TextBox::IsReadonly() const
+BOOL TextBox::isReadonly() const
 {
 	return !(WID_TBM_WRITE & m_wMode);
 }
 
-BOOL TextBox::IsPassword() const
+BOOL TextBox::isPassword() const
 {
 	return WID_TBM_PW & m_wMode;
 }

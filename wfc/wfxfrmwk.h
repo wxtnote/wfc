@@ -19,22 +19,23 @@ class MsgMap;
 class Widget;
 class Document;
 class View;
-
+typedef _my_ptr<Document> PDocument;
 class WFX_API View : public Widget
 {
 	WFX_DECLARE_FACTORY(View);
 protected:
 	View();
 public:
-	Document* GetDocument() const;
-	void SetDocument(Document* pDoc);
+	Document* getDocument() const;
+	void setDocument(Document* pDoc);
 protected:
-	Document* m_pDoc;
+	PDocument m_pDoc;
 };
 typedef Factory<View>							ViewFactory;
-typedef SharedPtr<ViewFactory>					PViewFactory;
-typedef const PViewFactory						CPViewFactroy;
-typedef SharedPtr<View>							PView;
+typedef std::tr1::shared_ptr<ViewFactory>					SSPViewFactory;
+typedef const SSPViewFactory						CSPViewFactroy;
+typedef std::tr1::shared_ptr<View>							SPView;
+typedef _my_ptr<View> PView;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Document : public MsgMap
 {
@@ -42,77 +43,77 @@ class WFX_API Document : public MsgMap
 protected:
 	Document();
 public:
-	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	virtual BOOL processMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 public:
-	virtual BOOL Open();
-	virtual BOOL Close();
-	View* GetView() const;
-	void SetView(View* pView);
+	virtual BOOL open();
+	virtual BOOL close();
+	View* getView() const;
+	void setView(View* pView);
 protected:
-	View* m_pView;
+	PView m_pView;
 };
 typedef Factory<Document>						DocFactory;
-typedef SharedPtr<DocFactory>					PDocFactory;
-typedef const PDocFactory						CPDocFactory;
-typedef SharedPtr<Document>						PDocutment;
-typedef std::pair<PDocFactory, PViewFactory>	Doc2ViewFactory;
+typedef std::tr1::shared_ptr<DocFactory>					SPDocFactory;
+typedef const SPDocFactory						CSPDocFactory;
+typedef std::tr1::shared_ptr<Document>						SPDocutment;
+typedef std::pair<SPDocFactory, SSPViewFactory>	Doc2ViewFactory;
 typedef std::vector<Doc2ViewFactory>			Doc2ViewFactoryList;
-typedef std::pair<PDocutment, PView>			Doc2View;
-typedef SharedPtr<Doc2View>						PDoc2View;
+typedef std::pair<SPDocutment, SPView>			Doc2View;
+typedef std::tr1::shared_ptr<Doc2View>						SPDoc2View;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API DocManager : public MsgMap
 {
 public:
 	DocManager();
 public:
-	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	virtual BOOL processMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 public:
-	virtual ULONG AddDoc(CPDocFactory& pDocFactory,
-		CPViewFactroy& pViewFactory);
-	virtual Document* Next();
-	virtual Document* Pre();
-	virtual Document* GetAt(int i);
-	virtual BOOL Open(int i);
-	virtual BOOL Close(int i);
+	virtual ULONG addDoc(CSPDocFactory& pDocFactory,
+		CSPViewFactroy& pViewFactory);
+	virtual Document* next();
+	virtual Document* pre();
+	virtual Document* getAt(int i);
+	virtual BOOL open(int i);
+	virtual BOOL close(int i);
 protected:
 	Doc2ViewFactoryList m_rgpDocToView;
-	PDoc2View			m_pCurDoc2View;
+	SPDoc2View			m_pCurDoc2View;
 	LONG m_nCurrent;
 };
-typedef SharedPtr<DocManager> PDocManager;
+typedef std::tr1::shared_ptr<DocManager> SPDocManager;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Frame : public Widget
 {
 public:
 	Frame();
 public:
-	virtual Document* GetActiveDoc();
+	virtual Document* getActiveDoc();
 public:
-	View* GetActiveView();
+	View* getActiveView();
 protected:
-	PWidget m_pMenuBar;
-	PWidget m_pStatusBar;
+	SPWidget m_pMenuBar;
+	SPWidget m_pStatusBar;
 };
-typedef SharedPtr<Frame> PFrame;
+typedef std::tr1::shared_ptr<Frame> SPFrame;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Application : public MsgMap
 {
 public:
-	Application(HINSTANCE hInstance, PFrame pFrame = PFrame());
+	Application(HINSTANCE hInstance, SPFrame pFrame = SPFrame());
 protected:
-	void AddDocument(CPDocFactory& pDocFactory,
-		CPViewFactroy& pViewFactory);
+	void addDocument(CSPDocFactory& pDocFactory,
+		CSPViewFactroy& pViewFactory);
 public:
-	virtual BOOL InitInstance();
-	virtual int ExitInstance();
-	virtual int Run();
+	virtual BOOL initInstance();
+	virtual int exitInstance();
+	virtual int run();
 protected:
 	HINSTANCE m_hInstance;
-	PDocManager m_pDocMgr;
-	PFrame m_pFrame;
+	SPDocManager m_pDocMgr;
+	SPFrame m_pFrame;
 };
-typedef SharedPtr<Application> PApplication;
+typedef std::tr1::shared_ptr<Application> SPApplication;
 
 END_NAMESPACE_WFX

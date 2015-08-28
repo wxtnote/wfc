@@ -10,18 +10,18 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 RadioButton::RadioButton()
 {
-	SetText(L"Radio");
+	setText(L"Radio");
 }
 
-void RadioButton::OnDraw( HDC hdc, const Rect& rc )
+void RadioButton::onDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), 0, m_lOffset, GetDispatcher());
-	WfxRender::DrawRadioBoxItem(hdc, GetItemRect(), GetState(), IsChecked(), GetDispatcher());
+	WfxRender::drawCheckBox(hdc, getText(), getRect(), 0, m_lOffset, getDispatcher());
+	WfxRender::drawRadioBoxItem(hdc, getItemRect(), getState(), isChecked(), getDispatcher());
 }

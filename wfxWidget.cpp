@@ -14,273 +14,302 @@
 
 USING_NAMESPACE_WFX;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-LRESULT MsgMap::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT MsgMap::sendMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 0;
-	ProcessMessage(uMsg, wParam, lParam, lResult, 0);
+	processMessage(uMsg, wParam, lParam, lResult, 0);
 	return lResult;
 }
-///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-AttrBase::AttrBase(Widget* pParent /*= NULL*/)
-: m_dwFormat(DT_SINGLELINE | DT_VCENTER | DT_LEFT)
-, m_clrText(WID_TEXT_STATIC)
-, m_clrBkgnd(WID_BKGND_STATIC)
-, m_clrFrame(WID_FRAME_STATIC)
-, m_wState(WID_STATE_STATIC)
-, m_pParent(pParent)
-, m_bCachedVirtualSize(FALSE)
+
+MsgMap::~MsgMap()
 {
 
 }
 
-void AttrBase::SetText( const String& strText )
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+AttrBase::AttrBase(Widget* pParent /*= NULL*/)
+: m_pParent(pParent)
+{
+	doInit();
+}
+
+void AttrBase::doInit()
+{
+	m_dwFormat = DT_SINGLELINE | DT_VCENTER | DT_LEFT;
+	m_clrText = WID_TEXT_STATIC;
+	m_clrBkgnd = WID_BKGND_STATIC;
+	m_clrFrame = WID_FRAME_STATIC;
+	m_wState = WID_STATE_STATIC;
+	m_bCachedVirtualSize = FALSE;
+}
+
+void AttrBase::setText( const String& strText )
 {
 	m_strText = strText;
 }
 
-String AttrBase::GetText() const
+void AttrBase::getText(String& str) const
+{
+	str = m_strText;
+}
+
+const String& AttrBase::getText() const
 {
 	return m_strText;
 }
 
-void AttrBase::SetFormat( DWORD dwFormat )
+void AttrBase::setFormat( DWORD dwFormat )
 {
 	m_dwFormat = dwFormat;
 }
 
-DWORD AttrBase::GetFormat() const
+DWORD AttrBase::getFormat() const
 {
 	return m_dwFormat;
 }
 
-void AttrBase::SetTextColor( COLORREF clrText )
+void AttrBase::setTextColor( COLORREF clrText )
 {
 	m_clrText = clrText;
 }
 
-COLORREF AttrBase::GetTextColor() const
+COLORREF AttrBase::getTextColor() const
 {
 	return m_clrText;
 }
 
-void AttrBase::SetBkgnd( COLORREF clrBkgnd )
+void AttrBase::setBkgnd( COLORREF clrBkgnd )
 {
 	m_clrBkgnd = clrBkgnd;
 }
 
-COLORREF AttrBase::GetBkgnd() const
+COLORREF AttrBase::getBkgnd() const
 {
 	return m_clrBkgnd;
 }
 
-void AttrBase::SetFrame( COLORREF clrFrame )
+void AttrBase::setFrame( COLORREF clrFrame )
 {
 	m_clrFrame = clrFrame;
 }
 
-COLORREF AttrBase::GetFrame() const
+COLORREF AttrBase::getFrame() const
 {
 	return m_clrFrame;
 }
 
-void AttrBase::SetState( WORD wState )
+void AttrBase::setState( WORD wState )
 {
 	m_wState = wState;
 }
 
-WORD AttrBase::GetState() const
+WORD AttrBase::getState() const
 {
 	return m_wState;
 }
 
-void AttrBase::SetRect( const Rect& rect )
+void AttrBase::setRect( const Rect& rc )
 {
-	m_rect = rect;
+	m_rect = rc;
 }
 
-Rect AttrBase::GetRect() const
+void AttrBase::getRect(Rect& rc) const
+{
+	rc = m_rect;
+}
+
+const Rect& AttrBase::getRect() const
 {
 	return m_rect;
 }
 
-Widget* AttrBase::GetParent() const
+Widget* AttrBase::getParent() const
 {
 	return m_pParent;
 }
 
-void AttrBase::SetParent( Widget* pParent )
+void AttrBase::setParent( Widget* pParent )
 {
 	m_pParent = pParent;
 }
-String AttrBase::GetToolTip() const
+
+void AttrBase::getToolTip(String& str) const
 {
-	return m_strText;
+	str = m_strText;
 }
 
-void AttrBase::SetToolTip( const String& strToolTip )
+void AttrBase::setToolTip( const String& strToolTip )
 {
 	m_strToolTip = strToolTip;
 }
 
-Size AttrBase::GetVirtualSize()
+void AttrBase::getVirtualSize(Size& sz)
 {
 	if (m_bCachedVirtualSize)
 	{
-		return m_szVirtualSize;
+		sz = m_szVirtualSize;
 	}
-	m_szVirtualSize = CalcVirtualSize();
+	calcVirtualSize(m_szVirtualSize);
+	sz = m_szVirtualSize;
+}
+
+const Size& AttrBase::getVirtualSize()
+{
+	Size sz;
+	getVirtualSize(sz);
 	return m_szVirtualSize;
 }
 
-Size AttrBase::CalcVirtualSize()
+
+void AttrBase::calcVirtualSize(Size& sz)
 {
-	SetVirtualSizeCached();
+	setVirtualSizeCached();
 	WFX_CONDITION(FALSE);
-	return Size();
 }
 
-BOOL AttrBase::IsVirtualSizeCached() const
+BOOL AttrBase::isVirtualSizeCached() const
 {
 	return m_bCachedVirtualSize;
 }
 
-void AttrBase::SetVirtualSizeCached( BOOL bCached /*= TRUE*/ )
+void AttrBase::setVirtualSizeCached( BOOL bCached /*= TRUE*/ )
 {
 	m_bCachedVirtualSize = bCached;
 }
 
+AttrBase::~AttrBase()
+{
+
+}
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Widget::Widget(void)
-: m_bNC(FALSE)
-, m_pDispatch(NULL)
-, m_hWid(INVALID_HWID)
-, m_pVScrollbar(NULL)
-, m_pHScrollbar(NULL)
-, m_uBarFlag(WESB_NONE)
-, m_wShow(SW_SHOW)
-, m_nID(0)
 {
-	
+	doInit();
+}
+
+void Widget::doInit()
+{
+	m_bNC = FALSE;
+	m_hWid = INVALID_HWID;
+	m_uBarFlag = WESB_NONE;
+	m_wShow = SW_SHOW;
+	m_nID = 0;
 }
 
 Widget::~Widget(void)
 {
-	if (GetDispatcher() != NULL)
+	if (getDispatcher() != null)
 	{
-		GetDispatcher()->Destroy(m_hWid);
+		getDispatcher()->destroy(m_hWid);
 	}
-	TDEL(m_pVScrollbar);
-	TDEL(m_pHScrollbar);
 }
 
-void Widget::SetRect( const Rect& rc )
+void Widget::setRect( const Rect& rc )
 {
-	AttrBase::SetRect(rc);
-	GetDispatcher()->SetWidRect(this, rc);
+	AttrBase::setRect(rc);
+	getDispatcher()->setWidRect(this, rc);
 }
 
-Rect Widget::GetParentRect() const
+void Widget::getParentRect(Rect& rc) const
 {
-	Rect rcParent;
-	if (m_pParent != NULL)
+	if (m_pParent != null)
 	{
-		rcParent = m_pParent->GetRect();
+		m_pParent->getRect(rc);
 	}
 	else
 	{
-		WFX_CONDITION(GetDispatcher() != NULL);
-		WFX_CONDITION(::IsWindow(GetDispatcher()->GetHwnd()));
-		::GetClientRect(GetDispatcher()->GetHwnd(), &rcParent);
+		WFX_CONDITION(getDispatcher() != NULL);
+		WFX_CONDITION(Window::isWindow(getDispatcher()->getHwnd()));
+		Window::getClientRect(getDispatcher()->getHwnd(), rc);
 	}
-	return rcParent;
 }
 
-BOOL Widget::Create( const Rect& rc, Widget* pParent /*= NULL*/, 
+BOOL Widget::create( const Rect& rc, Widget* pParent /*= NULL*/, 
 					Dispatcher* pDispatch /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
 	WFX_CONDITION(pDispatch != NULL || pParent != NULL);
 	if (pDispatch == NULL)
 	{
-		pDispatch = pParent->SearchDispather();
+		pDispatch = pParent->searchDispather();
 	}
 	WFX_CONDITION(pDispatch != NULL);
 	m_pDispatch = pDispatch;
-	m_pDispatch->Create(this);
+	m_pDispatch->createWid(this);
 	m_bNC = bNC;
-	SetParent(pParent);
-	SendWidMessage(WM_CREATE, 0, 0);
-	if (!rc.IsEmpty())
+	setParent(pParent);
+	sendMessage(WM_CREATE, 0, 0);
+	if (!rc.isEmpty())
 	{
-		SetRect(rc);
+		setRect(rc);
 	}
 	return TRUE;
 }
 
-void Widget::SetParent( Widget* pParent )
+void Widget::setParent( Widget* pParent )
 {
 	WFX_CONDITION(m_pDispatch != NULL);
-	m_pDispatch->SetParent(this, pParent);
+	m_pDispatch->setParent(this, pParent);
 }
 
-ULONG Widget::GetChildren( std::vector<Widget*>& rgpChildren ) const
+ULONG Widget::getChildren( std::vector<Widget*>& rgpChildren ) const
 {
 	rgpChildren = m_rgpChildren;
 	return rgpChildren.size();
 }
 
-ULONG Widget::GetChildren() const
+ULONG Widget::getChildren() const
 {
 	return m_rgpChildren.size();
 }
 
-BOOL Widget::HasChild() const
+BOOL Widget::hasChild() const
 {
 	return m_rgpChildren.size() != 0;
 }
 
-void Widget::InvalidWid()
+void Widget::invalidWid()
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	if (!IsShow())
+	WFX_CONDITION(getDispatcher() != NULL);
+	if (!isShow())
 	{
 		return;
 	}
-	Rect rcInvalid = GetRect();
+	Rect rcInvalid;
+	getRect(rcInvalid);
 	Rect rcTemp;
 	Rect rcParent;
 	Widget* pParent = this;
-	while(pParent = pParent->GetParent())
+	while(pParent = pParent->getParent())
 	{
 		rcTemp = rcInvalid;
-		rcParent = pParent->GetRect();
+		pParent->getRect(rcParent);
 		if (!::IntersectRect(&rcInvalid, &rcTemp, &rcParent))
 		{
 			return;
 		}
 	}
-	GetDispatcher()->Invalidate(GetRect());
+	getDispatcher()->invalidate(rcInvalid);
 }
 
-void Widget::OnDraw( HDC hdc, const Rect& rcPaint )
+void Widget::onDraw( HDC hdc, const Rect& rcPaint )
 {
-	Rect rcWid = GetRect();
-	Rect rc = rcWid;
-	WfxRender::DrawSolidRect(hdc, rc, WID_BKGND_STATIC, GetDispatcher());
-	WfxRender::DrawText(hdc, rc, GetText(), RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
-	WfxRender::DrawFrame(hdc, rcWid, WBTN_BKGND_MOUSE, GetDispatcher());
+	WfxRender::drawSolidRect(hdc, getRect(), WID_BKGND_STATIC, getDispatcher());
+	WfxRender::drawText(hdc, getRect(), getText(), RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
+	WfxRender::drawFrame(hdc, getRect(), WBTN_BKGND_MOUSE, getDispatcher());
 }
 
-void Widget::SetHwid( HWID hWid )
+void Widget::setHwid( HWID hWid )
 {
 	m_hWid = hWid;
 }
 
-HWID Widget::GetHwid() const
+HWID Widget::getHwid() const
 {
 	return m_hWid;
 }
 
-ULONG Widget::AddChild( Widget* pWid )
+ULONG Widget::addChild( Widget* pWid )
 {
 	std::vector<Widget*>::iterator it = 
 		std::find(m_rgpChildren.begin(), m_rgpChildren.end(), pWid);
@@ -291,7 +320,7 @@ ULONG Widget::AddChild( Widget* pWid )
 	return m_rgpChildren.size();
 }
 
-ULONG Widget::RemoveChild( Widget* pWid )
+ULONG Widget::removeChild( Widget* pWid )
 {
 	std::vector<Widget*>::iterator it = 
 		std::find(m_rgpChildren.begin(), m_rgpChildren.end(), pWid);
@@ -302,78 +331,78 @@ ULONG Widget::RemoveChild( Widget* pWid )
 	return m_rgpChildren.size();
 }
 
-void Widget::SetMyParent( Widget* pParent )
+void Widget::setMyParent( Widget* pParent )
 {
 	m_pParent = pParent;
 }
 
-void Widget::EnableScrollBar( UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
+void Widget::enableScrollBar( UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	GetDispatcher()->EnableScrollBar(this, uBarFlag, bEnable);
+	WFX_CONDITION(getDispatcher() != NULL);
+	getDispatcher()->enableScrollBar(this, uBarFlag, bEnable);
 }
 
-void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
+void Widget::setScrollBar( int nBar, ScrollBar* pScrollBar )
 {
 	if (SB_VERT == nBar)
 	{
-		m_pVScrollbar = pScrollBar;
+		m_pVScrollbar.reset(pScrollBar);
 	}
 	else
 	{
-		m_pHScrollbar = pScrollBar;
+		m_pHScrollbar.reset(pScrollBar);
 	}
 }
 
-void Widget::SetState( WORD wState )
+void Widget::setState( WORD wState )
 {
-	if (wState == GetState())
+	if (wState == getState())
 	{
 		return;
 	}
 
-	AttrBase::SetState(wState);
+	AttrBase::setState(wState);
 
-	SendWidMessage(WM_UPDATEUISTATE, wState);
+	sendMessage(WM_UPDATEUISTATE, wState);
 }
 
-void Widget::ShowWid( WORD wShow )
+void Widget::showWid( WORD wShow )
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	GetDispatcher()->ShowWid(this, wShow);
-	if (IsShow())
+	WFX_CONDITION(getDispatcher() != NULL);
+	getDispatcher()->showWid(this, wShow);
+	if (isShow())
 	{
-		InvalidWid();
+		invalidWid();
 	}
 }
 
-BOOL Widget::PostWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+BOOL Widget::postMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	LRESULT lResult = 0;
-	return ProcessMessage(uMsg, wParam, lParam, lResult, 0);
+	return processMessage(uMsg, wParam, lParam, lResult, 0);
 }
 
-UINT_PTR Widget::SetWidTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc /*= NULL*/)
+UINT_PTR Widget::setTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc /*= NULL*/)
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	return GetDispatcher()->SetWidTimer(this, nIDEvent, uElapse, lpTimerFunc);
+	WFX_CONDITION(getDispatcher() != NULL);
+	return getDispatcher()->setTimer(this, nIDEvent, uElapse, lpTimerFunc);
 }
 
-BOOL Widget::KillWidTimer( UINT_PTR uIDEvent )
+BOOL Widget::killTimer( UINT_PTR uIDEvent )
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	return GetDispatcher()->KillWidTimer(this, uIDEvent);
+	WFX_CONDITION(getDispatcher() != NULL);
+	return getDispatcher()->killTimer(this, uIDEvent);
 }
 
-BOOL Widget::IsShow() const
+BOOL Widget::isShow() const
 {
 	return (m_wShow != SW_HIDE);
 }
 
-void Widget::MyShowWid( WORD wShow )
+void Widget::doshowWid( WORD wShow )
 {
 	m_wShow = wShow;
-	SendWidMessage(WM_SHOWWINDOW, m_wShow);
+	sendMessage(WM_SHOWWINDOW, m_wShow);
 }
 
 Widget::operator HWID() const
@@ -381,62 +410,62 @@ Widget::operator HWID() const
 	return m_hWid;
 }
 
-void Widget::SetCapture()
+void Widget::setCapture()
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	GetDispatcher()->SetCapture(this);
+	WFX_CONDITION(getDispatcher() != NULL);
+	getDispatcher()->setCapture(this);
 }
 
-void Widget::ReleaseCapture()
+void Widget::releaseCapture()
 {
-	WFX_CONDITION(GetDispatcher() != NULL);
-	GetDispatcher()->ReleaseCapture();
+	WFX_CONDITION(getDispatcher() != NULL);
+	getDispatcher()->releaseCapture();
 }
 
-BOOL Widget::IsWidget() const
+BOOL Widget::isWidget() const
 {
 	if (this == NULL)
 	{
 		return FALSE;
 	}
-	return GetDispatcher()->IsWidget(this);
+	return getDispatcher()->isWidget(this);
 }
 
-BOOL Widget::IsCaptured() const
+BOOL Widget::isCaptured() const
 {
-	return GetDispatcher()->IsCaptured(this);
+	return getDispatcher()->isCaptured(this);
 }
 
-ScrollBar* Widget::GetScrollBar( int nBar ) const
+ScrollBar* Widget::getScrollBar( int nBar ) const
 {
 	if (SB_VERT == nBar)
-		return m_pVScrollbar;
-	return m_pHScrollbar;
+		return m_pVScrollbar.get();
+	return m_pHScrollbar.get();
 }
 
-UINT Widget::GetSBFlag() const
+UINT Widget::getSBFlag() const
 {
 	return m_uBarFlag;
 }
 
-void Widget::SetSBFlag( UINT uSBFlag )
+void Widget::setSBFlag( UINT uSBFlag )
 {
 	m_uBarFlag = uSBFlag;
 }
 
-BOOL Widget::ScrollWid( int XAmount, int YAmount )
+BOOL Widget::scrollWid( int XAmount, int YAmount )
 {
 	return TRUE;
 }
 
-BOOL Widget::InClientAera( const Point& pt )
+BOOL Widget::inClientAera( const Point& pt )
 {
 	return m_rcClient.PtInRect(pt);
 }
 
-Rect Widget::GetScrollBarRect( int nBar )
+Rect Widget::getScrollBarRect( int nBar )
 {
-	Rect rcWid = GetRect();
+	Rect rcWid = getRect();
 	Rect rcScrollBar = rcWid;
 	if (SB_HORZ == nBar)
 	{
@@ -446,7 +475,7 @@ Rect Widget::GetScrollBarRect( int nBar )
 		}
 		else
 		{
-			rcScrollBar.Empty();
+			rcScrollBar.empty();
 		}
 	}
 	else
@@ -461,63 +490,63 @@ Rect Widget::GetScrollBarRect( int nBar )
 		}
 		else
 		{
-			rcScrollBar.Empty();
+			rcScrollBar.empty();
 		}
 	}
 	return rcScrollBar;
 }
 
-LRESULT Widget::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Widget::onSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	return 0;
 }
 
-LRESULT Widget::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Widget::onCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	return 0;
 }
 
-LRESULT Widget::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Widget::onTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (m_wState == WID_STATE_STATIC)
 	{
-		SetState(WID_STATE_MOUSE);
+		setState(WID_STATE_MOUSE);
 	}
 	if (m_wState == WID_STATE_MOUSE)
 	{
-		SetState(WID_STATE_PUSH);
+		setState(WID_STATE_PUSH);
 	}
 	if (m_wState == WID_STATE_PUSH)
 	{
-		SetState(WID_STATE_STATIC);
+		setState(WID_STATE_STATIC);
 	}
 	return 0;
 }
 
-LRESULT Widget::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Widget::onKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	InvalidWid();
+	invalidWid();
 	return 0;
 }
 
-LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT Widget::onHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	InvalidWid();
+	invalidWid();
 	return 1;
 }
 
-LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+LRESULT Widget::sendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	LRESULT lResult = 0;
 	if (m_pParent != NULL)
 	{
-		lResult = m_pParent->SendWidMessage(uMsg, wParam, lParam);
+		lResult = m_pParent->sendMessage(uMsg, wParam, lParam);
 		if (!lResult)
 		{
-			Widget* pParent = m_pParent->GetParent();
+			Widget* pParent = m_pParent->getParent();
 			if (pParent != NULL)
 			{
-				return pParent->SendWidMessage(uMsg, wParam, lParam);
+				return pParent->sendMessage(uMsg, wParam, lParam);
 			}
 		}
 		else
@@ -528,70 +557,74 @@ LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lPar
 	return 0;
 }
 
-Rect Widget::GetClientRect() const
+Rect Widget::getClientRect() const
 {
 	return m_rcClient;
 }
 
-void Widget::SetClientRect( const Rect& rc )
+void Widget::setClientRect( const Rect& rc )
 {
 	m_rcClient = rc;
 }
 
-LONG Widget::GetVOffset() const
+LONG Widget::getVOffset() const
 {
-	if (GetScrollBar(SB_VERT) != NULL)
+	if (getScrollBar(SB_VERT) != NULL)
 	{
-		return GetScrollBar(SB_VERT)->GetPos();
+		return getScrollBar(SB_VERT)->getPos();
 	}
 	return 0;
 }
 
-LONG Widget::GetHOffset() const
+LONG Widget::getHOffset() const
 {
-	if (GetScrollBar(SB_HORZ) != NULL)
+	if (getScrollBar(SB_HORZ) != NULL)
 	{
-		return GetScrollBar(SB_HORZ)->GetPos();
+		return getScrollBar(SB_HORZ)->getPos();
 	}
 	return 0;
 }
 
-UINT Widget::GetID() const
+UINT Widget::getID() const
 {
 	return m_nID;
 }
 
-void Widget::SetID( UINT nID )
+void Widget::setID( UINT nID )
 {
 	m_nID = nID;
 }
 
-Size Widget::CalcVirtualSize()
+void Widget::calcVirtualSize(Size& sz)
 {
-	return Size();
 }
 
-Dispatcher* Widget::GetDispatcher() const
+Dispatcher* Widget::getDispatcher() const
 {
-	return m_pDispatch;
+	return m_pDispatch.get();
 }
 
-Dispatcher* Widget::SearchDispather() const
+Dispatcher* Widget::searchDispather() const
 {
+	if (m_pDispatch == NULL)
+
+	{
+
+	}
 	if (m_pDispatch != NULL)
 	{
-		return m_pDispatch;
+		return m_pDispatch.get();
 	}
-	Widget* pParent = GetParent();
+	Widget* pParent = getParent();
 	Dispatcher* pDispatch = NULL;
 	while(pParent != NULL)
 	{
-		pDispatch = pParent->GetDispatcher();
+		pDispatch = pParent->getDispatcher();
 		if (pDispatch != NULL)
 		{
 			return pDispatch;
 		}
-		pParent = pParent->GetParent();
+		pParent = pParent->getParent();
 	}
 	return pDispatch;
 }
@@ -603,53 +636,53 @@ UnitBase::UnitBase(Widget* pWid /*= NULL*/)
 
 }
 
-BOOL UnitBase::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL UnitBase::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	return TRUE;
 }
 
-LRESULT UnitBase::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+LRESULT UnitBase::sendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	if (m_pParent != NULL)
-		return m_pParent->SendWidMessage(uMsg, wParam, lParam);
+		return m_pParent->sendMessage(uMsg, wParam, lParam);
 	return 0;
 }
 
-void UnitBase::OnDraw( HDC hdc, const Rect& rc )
+void UnitBase::onDraw( HDC hdc, const Rect& rc )
 {
-	WfxRender::DrawSolidRect(hdc, GetRect(), WBTN_BKGND_MOUSE);
-	WfxRender::DrawFrame(hdc, GetRect(), RGB(30, 30, 30));
+	WfxRender::drawSolidRect(hdc, getRect(), WBTN_BKGND_MOUSE);
+	WfxRender::drawFrame(hdc, getRect(), RGB(30, 30, 30));
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-LRESULT WidCtrlBase::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrlBase::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (wParam == MK_LBUTTON)
 		return 0;
-	SetState(WID_STATE_MOUSE);
+	setState(WID_STATE_MOUSE);
 	return 1;
 }
 
-LRESULT WidCtrlBase::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrlBase::onMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	SetState(WID_STATE_STATIC);
+	setState(WID_STATE_STATIC);
 	return 1;
 }
 
-LRESULT WidCtrlBase::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrlBase::onStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	InvalidWid();
+	invalidWid();
 	return 1;
 }
 
-LRESULT WidCtrlBase::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrlBase::onLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	SetState(WID_STATE_PUSH);
+	setState(WID_STATE_PUSH);
 	return 1;
 }
 
-LRESULT WidCtrlBase::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrlBase::onLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	SetState(WID_STATE_MOUSE);
+	setState(WID_STATE_MOUSE);
 	return 1;
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
@@ -659,12 +692,12 @@ BarBase::BarBase( int nBar /*= SB_HORZ*/ )
 
 }
 
-int BarBase::GetBar() const
+int BarBase::getBar() const
 {
 	return m_nBar;
 }
 
-void BarBase::SetBar( int nBar )
+void BarBase::setBar( int nBar )
 {
 	m_nBar = nBar;
 }
@@ -685,7 +718,7 @@ ImageWid::ImageWid(const String& strStatic,
 {
 }
 
-void ImageWid::SetImage( WORD wState, const String& strImage )
+void ImageWid::setImage( WORD wState, const String& strImage )
 {
 	switch(wState)
 	{
@@ -706,7 +739,7 @@ void ImageWid::SetImage( WORD wState, const String& strImage )
 	}
 }
 
-void ImageWid::SetImage( const String& strStatic, 
+void ImageWid::setImage( const String& strStatic, 
 						const String& strMouse, 
 						const String& strPush,
 						const String& strChecked)
@@ -717,10 +750,10 @@ void ImageWid::SetImage( const String& strStatic,
 	m_pImgChecked.reset(WFX_GET_IMAGE(strChecked.c_str()));
 }
 
-Gdiplus::Image* ImageWid::GetImageFromState()
+Gdiplus::Image* ImageWid::getImageFromState()
 {
 	Gdiplus::Image* pImage;
-	switch(GetState())
+	switch(getState())
 	{
 	case WID_STATE_STATIC:
 		pImage = m_pImgStatic.get();
@@ -747,17 +780,22 @@ InPlaceWid::InPlaceWid()
 
 }
 
-LRESULT InPlaceWid::OnSetFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT InPlaceWid::onSetFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if (Initial())
+	if (initial())
 	{
 		return 0;
 	}
 	return 1;
 }
 
-void InPlaceWid::Reset()
+void InPlaceWid::reset()
 {
 	m_pWindow = NULL;
 }
 
+
+void TextBox::setReadonly()
+{
+	m_wMode &= ~WID_TBM_WRITE;
+}

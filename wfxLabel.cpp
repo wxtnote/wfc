@@ -10,14 +10,14 @@
 //
 #include "StdAfx.h"
 #include "wfxwidget.h"
-#include "wfxcmn.h"
+#include "wfxcmnctrl.h"
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
-void Label::OnDraw( HDC hdc, const Rect& rc )
+void Label::onDraw( HDC hdc, const Rect& rc )
 {
-	Rect rcDraw = GetClientRect();
-	rcDraw.left -= GetHOffset();
-	WfxRender::DrawText(hdc, rcDraw, GetText(), WBTN_BKGND_MOUSE, DT_VCENTER | DT_LEFT);
+	Rect rcDraw = getClientRect();
+	rcDraw.left -= getHOffset();
+	WfxRender::drawText(hdc, rcDraw, getText(), WBTN_BKGND_MOUSE, DT_VCENTER | DT_LEFT);
 }

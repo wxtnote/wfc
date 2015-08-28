@@ -97,7 +97,7 @@ Pane::Pane(int nBar/* = SB_HORZ*/)
 
 }
 
-BOOL Pane::addItem( Widget* pWidget, float fScale /*= 1.00*/, BOOL bShow /*= TRUE*/ )
+BOOL Pane::addPane( Widget* pWidget, float fScale /*= 1.00*/, BOOL bShow /*= TRUE*/ )
 {
 	PaneItem* pPI = getLast();
 	if (pPI != NULL)
@@ -119,7 +119,7 @@ BOOL Pane::addItem( Widget* pWidget, float fScale /*= 1.00*/, BOOL bShow /*= TRU
 	return TRUE;
 }
 
-BOOL Pane::addItem( ULONG nInitSize, Widget* pWidget, BOOL bShow /*= TRUE*/ )
+BOOL Pane::addPane( ULONG nInitSize, Widget* pWidget, BOOL bShow /*= TRUE*/ )
 {
 	return TRUE;
 }
@@ -339,8 +339,8 @@ void Pane::adjustSplitRangeVert()
 			WFX_CONDITION(pPINext != NULL);
 			WFX_CONDITION(pPINext->isWidget());
 			pPISplit->getSplitInfo()->getSplitBar()->setRange(
-				pPIPre->getWidgetInfo()->m_pWidget->getRect().top,
-				pPINext->getWidgetInfo()->m_pWidget->getRect().bottom);
+				pPIPre->getWidgetInfo()->m_pWidget->getRect().top + SIZE_SPLITBAR,
+				pPINext->getWidgetInfo()->m_pWidget->getRect().bottom - SIZE_SPLITBAR);
 		}	
 	}
 }
@@ -364,8 +364,8 @@ void Pane::adjustSplitRangeHorz()
 			WFX_CONDITION(pPINext != NULL);
 			WFX_CONDITION(pPINext->isWidget());
 			pPISplit->getSplitInfo()->getSplitBar()->setRange(
-				pPIPre->getWidgetInfo()->m_pWidget->getRect().left,
-				pPINext->getWidgetInfo()->m_pWidget->getRect().right);
+				pPIPre->getWidgetInfo()->m_pWidget->getRect().left + SIZE_SPLITBAR,
+				pPINext->getWidgetInfo()->m_pWidget->getRect().right - SIZE_SPLITBAR);
 		}	
 	}
 }

@@ -510,6 +510,7 @@ LRESULT Dispatcher::onNotify( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT Dispatcher::onKillFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	m_bMouseTracking = FALSE;
 	return 1;
 }
 

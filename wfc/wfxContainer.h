@@ -221,8 +221,8 @@ class WFX_API Pane : public Container, public BarBase
 public:
 	Pane(int nBar = SB_HORZ);
 public:
-	BOOL addItem(Widget* pWidget, float fScale = 1.00, BOOL bShow = TRUE);
-	BOOL addItem(ULONG nInitSize, Widget* pWidget, BOOL bShow = TRUE);
+	BOOL addPane(Widget* pWidget, float fScale = 1.00, BOOL bShow = TRUE);
+	BOOL addPane(ULONG nInitSize, Widget* pWidget, BOOL bShow = TRUE);
 public:
 	WFX_BEGIN_MSG_MAP(Pane)
 		WFX_ON_MESSAGE(WM_CREATE, onCreate)

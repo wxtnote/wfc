@@ -257,44 +257,6 @@ public:
 	LONG m_nRow;
 	LONG m_nCol;
 };
-class WFX_API AttributeBase
-{
-	
-};
-
-class WFX_API AdapterBase
-{
-public:
-	virtual ULONG getCount() const = 0;
-};
-
-class WFX_API ObjectAdapterBase : public AdapterBase
-{
-public:
-	virtual void addAttribute(AttributeBase* pAttribute) = 0;
-	virtual AttributeBase* getAttribute(ULONG nPos) = 0;
-};
-
-class WFX_API ArrayAdapterBase : public AdapterBase
-{
-
-};
-
-template <class _Ty>
-class ArrayAdapter : public AdapterBase
-{
-public:
-	ArrayAdapter(Widget* pWidget, const std::vector<_Ty>& rgData);
-public:
-	virtual ULONG getCount() const;
-	virtual Cell* getCell(ULONG nPos);
-protected:
-	PWidget m_pOwner;
-	std::vector<_Ty> m_rgData;
-	std::vector<SPCell> m_rgpCell;
-};
-
-#include "wfxCmnCtrl.inl"
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API VorticalLayerCtrl : public Widget
 {

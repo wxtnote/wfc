@@ -231,9 +231,9 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 
 #define INVALID_HWID NULL
 
-#define SIZE_SCROLLBAR 11
+#define SIZE_SCROLLBAR 8
 
-#define SIZE_SPLITBAR 5
+#define SIZE_SPLITBAR 3
 
 #define MIN_SCROLLBAR_THUMB 20
 

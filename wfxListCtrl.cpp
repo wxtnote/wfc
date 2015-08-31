@@ -526,6 +526,9 @@ void CellID::clear()
 	m_nRow = -1;
 	m_nCol = -1;
 }
+
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 VorticalLayerCtrl::VorticalLayerCtrl()
 : m_pRoot(new TNode)

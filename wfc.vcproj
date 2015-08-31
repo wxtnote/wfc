@@ -326,10 +326,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfc\wfxCmnCtrl.inl"
-				>
-			</File>
-			<File
 				RelativePath=".\wfc\wfxCmnWnd.h"
 				>
 			</File>

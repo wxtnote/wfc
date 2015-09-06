@@ -69,7 +69,7 @@ ULONG TNode::getMyLayer() const
 	return nLayer + m_pParent->getMyLayer();
 }
 
-BOOL TNode::HasLayers() const
+BOOL TNode::hasLayers() const
 {
 	for (std::vector<SPTNode>::const_iterator it =
 		m_rgpChildren.begin(); it != m_rgpChildren.end(); ++it)
@@ -917,6 +917,7 @@ void ListCtrl::onDraw( HDC hdc, const Rect& rcPaint )
 	LONG nTotalRow = getTotalRows();
 	LONG nTotalCol = getTotalColumns();
 	ULONG nSeqBarWidth = getRowNumBarWidth();
+	ObjectAdapterBase* pOjbect = NULL;
 	for (LONG nRow = m_nStartRow, nRowNum = 0; nRow <= m_nEndRow; nRow++, nRowNum++)
 	{
 		pDrawItemInfo->m_nRow = nRow;
@@ -931,8 +932,15 @@ void ListCtrl::onDraw( HDC hdc, const Rect& rcPaint )
 		{
 			bRowexpanded = isExpanded(nRow);
 		}
+		pOjbect = m_pArrayAdapter->getAt(nRow);
+		WFX_CONDITION(pOjbect != NULL);
+
 		for (LONG nCol = m_nStartCol; nCol <= m_nEndCol; nCol++)
 		{
+			WFX_CONDITION(nCol < pOjbect->getCount());
+			AttributeBase* pAttribute = pOjbect->getAt(nCol);
+			WFX_CONDITION(pAttribute != NULL);
+
 			CellID cellID(nRow, nCol);
 			dwState = WCS_NORMAL;
 			if (m_bHasSubItem && nCol == 0)
@@ -959,6 +967,8 @@ void ListCtrl::onDraw( HDC hdc, const Rect& rcPaint )
 			pDrawItemInfo->m_nCol = nCol;
 			pDrawItemInfo->m_prcItem = &rcCell;
 			pDrawItemInfo->m_dwState = dwState;
+			pDrawItemInfo->m_pszText = pAttribute->getText().c_str();
+			pDrawItemInfo->m_dwFormat = pAttribute->getFormat();
 			onDrawItem(pDrawItemInfo);
 		}
 	}
@@ -1053,9 +1063,19 @@ void ListCtrl::onDrawHeadCtrl( const LCDrawItemInfo* pDrawItemInfo )
 		pDrawItemInfo->m_pszText, WBTN_BKGND_MOUSE, pDrawItemInfo->m_dwFormat);
 }
 
+void ListCtrl::onVisit( ULONG nPos, AttributeBase* pAttribute )
+{
+
+}
+
 ULONG ListCtrl::getTotalRows() const
 {
-	return getTotalItems();
+	/*return getTotalItems();*/
+	if (m_pArrayAdapter == NULL)
+	{
+		return 0;
+	}
+	return m_pArrayAdapter->getCount();
 }
 
 ULONG ListCtrl::getTotalColumns() const

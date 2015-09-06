@@ -58,11 +58,11 @@ public:
 	LRESULT sendMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API AttrBase
+class WFX_API UnitBase
 {
 public:
-	AttrBase(Widget* pParent = NULL);
-	virtual ~AttrBase();
+	UnitBase(Widget* pParent = NULL);
+	virtual ~UnitBase();
 private:
 	void doInit();
 public:
@@ -105,11 +105,11 @@ protected:
 	Size m_szVirtualSize;
 	BOOL m_bCachedVirtualSize;
 };
-typedef std::tr1::shared_ptr<AttrBase> SPBasicAttr;
+typedef std::tr1::shared_ptr<UnitBase> SPBasicAttr;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Widget: the root class of ui classes
 class WFX_API Widget :
-	public MsgMap, public AttrBase
+	public MsgMap, public UnitBase
 {
 	friend class Dispatcher;
 	friend class Timer;
@@ -233,10 +233,10 @@ private:
 	UINT m_nID;
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API UnitBase : public MsgMap, public AttrBase
+class WFX_API WidUnit : public MsgMap, public UnitBase
 {
 public:
-	UnitBase(Widget* pWid = NULL);
+	WidUnit(Widget* pWid = NULL);
 public:
 	virtual BOOL processMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
@@ -244,7 +244,7 @@ public:
 public:
 	virtual void onDraw(HDC hdc, const Rect& rc);
 };
-typedef std::tr1::shared_ptr<UnitBase> SPUnitBase;
+typedef std::tr1::shared_ptr<WidUnit> SPWidUnit;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API BarBase
 {
@@ -257,10 +257,10 @@ protected:
 	int m_nBar;
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API WidCtrlBase : public Widget
+class WFX_API WidCtrl : public Widget
 {
 public:
-	WFX_BEGIN_MSG_MAP(WidCtrlBase)
+	WFX_BEGIN_MSG_MAP(WidCtrl)
 		WFX_ON_MESSAGE(WM_MOUSEMOVE, onMouseMove)
 		WFX_ON_MESSAGE(WM_MOUSELEAVE, onMouseLeave)
 		WFX_ON_MESSAGE(WM_LBUTTONDOWN, onLButtonDown)
@@ -281,7 +281,7 @@ public:
 		BOOL& bHandled);
 };
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ProcessBar : public WidCtrlBase, public BarBase
+class WFX_API ProcessBar : public WidCtrl, public BarBase
 {
 public:
 	ProcessBar(int nBar = SB_HORZ);
@@ -401,7 +401,7 @@ protected:
 };
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API ImageWid : public WidCtrlBase
+class WFX_API ImageWid : public WidCtrl
 {
 public:
 	ImageWid();
@@ -484,14 +484,14 @@ protected:
 };
 typedef std::tr1::shared_ptr<RadioButton> SPRadioButton;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API Label : public WidCtrlBase
+class WFX_API Label : public WidCtrl
 {
 protected:
 	virtual void onDraw(HDC hdc, const Rect& rc);
 };
 typedef std::tr1::shared_ptr<Label> SPLabel;
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-class WFX_API InPlaceWid : public WidCtrlBase
+class WFX_API InPlaceWid : public WidCtrl
 {
 	friend class InPlaceWnd;
 public:
@@ -499,7 +499,7 @@ public:
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWid)
 		WFX_ON_MESSAGE(WM_SETFOCUS, onSetFocus)
-		WFX_CHAIN_MSG_MAP(WidCtrlBase)
+		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT onSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,

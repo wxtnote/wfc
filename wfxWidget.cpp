@@ -27,13 +27,13 @@ MsgMap::~MsgMap()
 }
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-AttrBase::AttrBase(Widget* pParent /*= NULL*/)
+UnitBase::UnitBase(Widget* pParent /*= NULL*/)
 : m_pParent(pParent)
 {
 	doInit();
 }
 
-void AttrBase::doInit()
+void UnitBase::doInit()
 {
 	m_dwFormat = DT_SINGLELINE | DT_VCENTER | DT_LEFT;
 	m_clrText = WID_TEXT_STATIC;
@@ -43,107 +43,107 @@ void AttrBase::doInit()
 	m_bCachedVirtualSize = FALSE;
 }
 
-void AttrBase::setText( const String& strText )
+void UnitBase::setText( const String& strText )
 {
 	m_strText = strText;
 }
 
-void AttrBase::getText(String& str) const
+void UnitBase::getText(String& str) const
 {
 	str = m_strText;
 }
 
-const String& AttrBase::getText() const
+const String& UnitBase::getText() const
 {
 	return m_strText;
 }
 
-void AttrBase::setFormat( DWORD dwFormat )
+void UnitBase::setFormat( DWORD dwFormat )
 {
 	m_dwFormat = dwFormat;
 }
 
-DWORD AttrBase::getFormat() const
+DWORD UnitBase::getFormat() const
 {
 	return m_dwFormat;
 }
 
-void AttrBase::setTextColor( COLORREF clrText )
+void UnitBase::setTextColor( COLORREF clrText )
 {
 	m_clrText = clrText;
 }
 
-COLORREF AttrBase::getTextColor() const
+COLORREF UnitBase::getTextColor() const
 {
 	return m_clrText;
 }
 
-void AttrBase::setBkgnd( COLORREF clrBkgnd )
+void UnitBase::setBkgnd( COLORREF clrBkgnd )
 {
 	m_clrBkgnd = clrBkgnd;
 }
 
-COLORREF AttrBase::getBkgnd() const
+COLORREF UnitBase::getBkgnd() const
 {
 	return m_clrBkgnd;
 }
 
-void AttrBase::setFrame( COLORREF clrFrame )
+void UnitBase::setFrame( COLORREF clrFrame )
 {
 	m_clrFrame = clrFrame;
 }
 
-COLORREF AttrBase::getFrame() const
+COLORREF UnitBase::getFrame() const
 {
 	return m_clrFrame;
 }
 
-void AttrBase::setState( WORD wState )
+void UnitBase::setState( WORD wState )
 {
 	m_wState = wState;
 }
 
-WORD AttrBase::getState() const
+WORD UnitBase::getState() const
 {
 	return m_wState;
 }
 
-void AttrBase::setRect( const Rect& rc )
+void UnitBase::setRect( const Rect& rc )
 {
 	m_rect = rc;
 }
 
-void AttrBase::getRect(Rect& rc) const
+void UnitBase::getRect(Rect& rc) const
 {
 	rc = m_rect;
 }
 
-const Rect& AttrBase::getRect() const
+const Rect& UnitBase::getRect() const
 {
 	return m_rect;
 }
 
-Widget* AttrBase::getParent() const
+Widget* UnitBase::getParent() const
 {
 	return m_pParent;
 }
 
-void AttrBase::setParent( Widget* pParent )
+void UnitBase::setParent( Widget* pParent )
 {
 	m_pParent = pParent;
 }
 
-void AttrBase::getToolTip(String& str) const
+void UnitBase::getToolTip(String& str) const
 {
 	str = m_strText;
 }
 
-void AttrBase::setToolTip( const String& strToolTip )
+void UnitBase::setToolTip( const String& strToolTip )
 {
 	m_strToolTip = strToolTip;
 }
 
-void AttrBase::getVirtualSize(Size& sz)
+void UnitBase::getVirtualSize(Size& sz)
 {
 	if (m_bCachedVirtualSize)
 	{
@@ -153,7 +153,7 @@ void AttrBase::getVirtualSize(Size& sz)
 	sz = m_szVirtualSize;
 }
 
-const Size& AttrBase::getVirtualSize()
+const Size& UnitBase::getVirtualSize()
 {
 	Size sz;
 	getVirtualSize(sz);
@@ -161,23 +161,23 @@ const Size& AttrBase::getVirtualSize()
 }
 
 
-void AttrBase::calcVirtualSize(Size& sz)
+void UnitBase::calcVirtualSize(Size& sz)
 {
 	setVirtualSizeCached();
 	WFX_CONDITION(FALSE);
 }
 
-BOOL AttrBase::isVirtualSizeCached() const
+BOOL UnitBase::isVirtualSizeCached() const
 {
 	return m_bCachedVirtualSize;
 }
 
-void AttrBase::setVirtualSizeCached( BOOL bCached /*= TRUE*/ )
+void UnitBase::setVirtualSizeCached( BOOL bCached /*= TRUE*/ )
 {
 	m_bCachedVirtualSize = bCached;
 }
 
-AttrBase::~AttrBase()
+UnitBase::~UnitBase()
 {
 
 }
@@ -207,7 +207,7 @@ Widget::~Widget(void)
 
 void Widget::setRect( const Rect& rc )
 {
-	AttrBase::setRect(rc);
+	UnitBase::setRect(rc);
 	getDispatcher()->setWidRect(this, rc);
 }
 
@@ -361,7 +361,7 @@ void Widget::setState( WORD wState )
 		return;
 	}
 
-	AttrBase::setState(wState);
+	UnitBase::setState(wState);
 
 	sendMessage(WM_UPDATEUISTATE, wState);
 }
@@ -630,31 +630,31 @@ Dispatcher* Widget::searchDispather() const
 }
 
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-UnitBase::UnitBase(Widget* pWid /*= NULL*/)
-: AttrBase(pWid)
+WidUnit::WidUnit(Widget* pWid /*= NULL*/)
+: UnitBase(pWid)
 {
 
 }
 
-BOOL UnitBase::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL WidUnit::processMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	return TRUE;
 }
 
-LRESULT UnitBase::sendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+LRESULT WidUnit::sendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	if (m_pParent != NULL)
 		return m_pParent->sendMessage(uMsg, wParam, lParam);
 	return 0;
 }
 
-void UnitBase::onDraw( HDC hdc, const Rect& rc )
+void WidUnit::onDraw( HDC hdc, const Rect& rc )
 {
 	WfxRender::drawSolidRect(hdc, getRect(), WBTN_BKGND_MOUSE);
 	WfxRender::drawFrame(hdc, getRect(), RGB(30, 30, 30));
 }
 ///////////////////////////*** a gorgeous partition line ***/////////////////////////////
-LRESULT WidCtrlBase::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrl::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (wParam == MK_LBUTTON)
 		return 0;
@@ -662,25 +662,25 @@ LRESULT WidCtrlBase::onMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	return 1;
 }
 
-LRESULT WidCtrlBase::onMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrl::onMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	setState(WID_STATE_STATIC);
 	return 1;
 }
 
-LRESULT WidCtrlBase::onStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrl::onStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	invalidWid();
 	return 1;
 }
 
-LRESULT WidCtrlBase::onLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrl::onLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	setState(WID_STATE_PUSH);
 	return 1;
 }
 
-LRESULT WidCtrlBase::onLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT WidCtrl::onLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	setState(WID_STATE_MOUSE);
 	return 1;
